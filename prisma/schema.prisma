@@ -1,0 +1,40 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model School {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique
+  passwordHash String
+  name         String
+  artworks     Artwork[]
+}
+        
+model User {
+  id           Int     @id @default(autoincrement())
+  schoolId     Int?
+  role         String  // "teacher", "admin"
+  username     String  @unique
+  passwordHash String
+}
+
+model Artwork {
+  id           Int       @id @default(autoincrement())
+  schoolId     Int
+  title        String
+  nickname     String
+  imagePath    String
+  status       String    @default("pending") // "pending", "approved", "rejected"
+  rejectReason String?
+  createdAt    DateTime  @default(now())
+  approvedAt   DateTime?
+  xiboMediaId  Int?
+
+  school       School    @relation(fields: [schoolId], references: [id])
+}
