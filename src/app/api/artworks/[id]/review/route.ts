@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 function getIdFromRequest(
   request: NextRequest,
-  context: { params?: { id?: string } }
+  context: { params?: { id?: string } },
 ) {
   let id = context?.params?.id;
   if (!id) {
@@ -17,11 +17,14 @@ function getIdFromRequest(
   return id;
 }
 
-export async function PATCH(
-  request: NextRequest,
-  context: { params?: { id?: string } }
-) {
-  const id = getIdFromRequest(request, context);
+interface RouteContext {
+  params: Promise<{ id: string }>; // Ensure `params` is a Promise
+}
+
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  // Await the params before using it
+  const params = await context.params;
+  const id = params?.id;
   if (!id) {
     return NextResponse.json(
       {
@@ -29,7 +32,7 @@ export async function PATCH(
         params: context?.params ?? null,
         url: request.url,
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -45,14 +48,14 @@ export async function PATCH(
   }
 
   try {
-    const body = await request.json().catch(() => ({} as any));
+    const body = await request.json().catch(() => ({}) as any);
     const action = body?.action as "approve" | "reject" | undefined;
     const rejectReason = body?.rejectReason as string | undefined;
 
     if (action !== "approve" && action !== "reject") {
       return NextResponse.json(
         { error: "Invalid action. Use 'approve' or 'reject'." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -84,7 +87,7 @@ export async function PATCH(
     if (artwork.status === "approved") {
       return NextResponse.json(
         { error: "Artwork already approved" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -102,7 +105,7 @@ export async function PATCH(
     console.error("Review failed:", error);
     return NextResponse.json(
       { error: "Review failed", message: error?.message, prisma: error?.code },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

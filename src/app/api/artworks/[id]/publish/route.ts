@@ -35,11 +35,8 @@ function extractMediaId(xiboResponse: any): number | null {
   return null;
 }
 
-function getIdFromRequest(
-  request: NextRequest,
-  context: { params?: { id?: string } },
-) {
-  let id = context?.params?.id;
+function getIdFromRequest(request: NextRequest, params: { id: string }) {
+  let id = params?.id;
   if (!id) {
     const pathname = new URL(request.url).pathname; // /api/artworks/5/publish
     const m = pathname.match(/^\/api\/artworks\/([^/]+)\/publish\/?$/);
@@ -49,10 +46,11 @@ function getIdFromRequest(
 }
 
 interface RouteContext {
-  params: { id: string }; // Ensure `id` is always defined
+  params: Promise<{ id: string }>;
 }
 export async function POST(request: NextRequest, context: RouteContext) {
-  const id = getIdFromRequest(request, context);
+  const params = await context.params;
+  const id = getIdFromRequest(request, params);
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
   const artworkId = Number(id);
