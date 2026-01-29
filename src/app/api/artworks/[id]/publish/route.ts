@@ -48,10 +48,10 @@ function getIdFromRequest(
   return id;
 }
 
-export async function POST(
-  request: NextRequest,
-  context: { params?: { id?: string } },
-) {
+interface RouteContext {
+  params: { id: string }; // Ensure `id` is always defined
+}
+export async function POST(request: NextRequest, context: RouteContext) {
   const id = getIdFromRequest(request, context);
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
