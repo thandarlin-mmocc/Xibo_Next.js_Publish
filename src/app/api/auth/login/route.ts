@@ -1,23 +1,124 @@
+// export const dynamic = "force-dynamic";
+// import { prisma } from "@/lib/prisma";
+// import { encrypt } from "@/lib/session";
+// import * as bcrypt from "bcryptjs";
+// import { cookies } from "next/headers"; // Correct way to set cookies in App Router
+// import { NextResponse } from "next/server";
+
+// export async function POST(request: Request) {
+//   try {
+//     const body = await request.json();
+//     const { type, credentials } = body; // type: 'teacher' | 'admin'
+
+//     let user = null;
+//     let role = "";
+//     let schoolId = null;
+
+//     if (type === "teacher") {
+//       const school = await prisma.school.findUnique({
+//         where: { code: credentials.code },
+//       });
+//       if (
+//         !school ||
+//         !(await bcrypt.compare(credentials.password, school.passwordHash))
+//       ) {
+//         return NextResponse.json(
+//           { error: "Invalid school code or password" },
+//           { status: 401 },
+//         );
+//       }
+//       user = { id: school.id, name: school.name };
+//       role = "teacher";
+//       schoolId = school.id;
+//     } else if (type === "admin") {
+//       const admin = await prisma.user.findUnique({
+//         where: { username: credentials.username },
+//       });
+//       if (
+//         !admin ||
+//         !(await bcrypt.compare(credentials.password, admin.passwordHash))
+//       ) {
+//         return NextResponse.json(
+//           { error: "Invalid admin credentials" },
+//           { status: 401 },
+//         );
+//       }
+//       user = { id: admin.id, name: "Administrator" };
+//       role = "admin";
+//       schoolId = null;
+//     } else {
+//       return NextResponse.json(
+//         { error: "Invalid login type" },
+//         { status: 400 },
+//       );
+//     }
+
+//     // Create session
+//     const session = await encrypt({
+//       id: user.id,
+//       role,
+//       schoolId,
+//       name: user.name,
+//     });
+
+//     // Set cookie
+//     const cookieStore = await cookies();
+//     cookieStore.set("session", session, {
+//       httpOnly: true,
+//       expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+//     });
+
+//     return NextResponse.json({
+//       success: true,
+//       user: { role, name: user.name },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return NextResponse.json(
+//       { error: "Internal Server Error" },
+//       { status: 500 },
+//     );
+//   }
+// }
+
+// app/api/auth/login/route.ts
 export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/prisma";
 import { encrypt } from "@/lib/session";
 import * as bcrypt from "bcryptjs";
-import { cookies } from "next/headers"; // Correct way to set cookies in App Router
 import { NextResponse } from "next/server";
+
+/**
+ * Helper to set cookie in App Router
+ */
+function setCookie(
+  response: NextResponse,
+  name: string,
+  value: string,
+  maxAge = 24 * 60 * 60,
+) {
+  response.headers.append(
+    "Set-Cookie",
+    `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`,
+  );
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { type, credentials } = body; // type: 'teacher' | 'admin'
 
-    let user = null;
+    let user: { id: number; name: string } | null = null;
     let role = "";
-    let schoolId = null;
+    let schoolId: number | null = null;
 
+    // ---------- TEACHER LOGIN ----------
     if (type === "teacher") {
       const school = await prisma.school.findUnique({
         where: { code: credentials.code },
       });
+
       if (
         !school ||
         !(await bcrypt.compare(credentials.password, school.passwordHash))
@@ -27,13 +128,17 @@ export async function POST(request: Request) {
           { status: 401 },
         );
       }
+
       user = { id: school.id, name: school.name };
       role = "teacher";
       schoolId = school.id;
+
+      // ---------- ADMIN LOGIN ----------
     } else if (type === "admin") {
       const admin = await prisma.user.findUnique({
         where: { username: credentials.username },
       });
+
       if (
         !admin ||
         !(await bcrypt.compare(credentials.password, admin.passwordHash))
@@ -43,6 +148,7 @@ export async function POST(request: Request) {
           { status: 401 },
         );
       }
+
       user = { id: admin.id, name: "Administrator" };
       role = "admin";
       schoolId = null;
@@ -53,7 +159,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create session
+    // ---------- CREATE SESSION ----------
     const session = await encrypt({
       id: user.id,
       role,
@@ -61,19 +167,17 @@ export async function POST(request: Request) {
       name: user.name,
     });
 
-    // Set cookie
-    const cookieStore = await cookies();
-    cookieStore.set("session", session, {
-      httpOnly: true,
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    });
-
-    return NextResponse.json({
+    // ---------- RETURN RESPONSE WITH COOKIE ----------
+    const response = NextResponse.json({
       success: true,
       user: { role, name: user.name },
     });
+
+    setCookie(response, "session", session);
+
+    return response;
   } catch (error) {
-    console.error(error);
+    console.error("Login failed:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
