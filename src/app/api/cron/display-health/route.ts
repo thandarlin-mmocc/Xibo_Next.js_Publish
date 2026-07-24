@@ -10,8 +10,15 @@ export const runtime = "nodejs";
  * that file). This endpoint's auth gate and upsert logic are real and ready;
  * the Xibo call inside listDisplays needs the Week 1 spike run first.
  *
- * Wire to Vercel Cron (see vercel.json) once real Xibo credentials are in
- * place: GET this URl with `Authorization: Bearer $CRON_SECRET`.
+ * Deliberately NOT wired into vercel.json's crons yet - listDisplays()'s
+ * permissive array-fallback parsing means a wrong response shape from an
+ * unverified endpoint would return {success:true, count:0} instead of an
+ * error, masking a broken integration as a working one if this ran
+ * unattended every 10 minutes. Once the Week 1 spike has run against real
+ * staging credentials and this function's parsing is confirmed correct, add
+ * back `{ "path": "/api/cron/display-health", "schedule": "*\/10 * * * *" }`
+ * to vercel.json's crons array. Until then, call it manually (GET with
+ * `Authorization: Bearer $CRON_SECRET`) to spot-check, not on a schedule.
  *
  * Displays aren't mapped to a tenant automatically - Xibo has no concept of
  * our tenants. New rows land with tenantId null; assigning them to a tenant

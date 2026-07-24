@@ -68,24 +68,36 @@ export function isAirportRole(role: UserRole): boolean {
  * (pure role classification, used for e.g. roleHomePath), these also let the
  * platform ADMIN in, since a super admin needs to see into every area for
  * real cross-tenant oversight.
+ *
+ * CONTENT_EDITOR isn't tied to one vertical by role alone - it follows
+ * whichever tenant the account actually belongs to. Defaults to the school
+ * area unless the tenant is explicitly an airport, so a CONTENT_EDITOR with
+ * an unresolved tenantType (shouldn't happen, but cheap to guard) still
+ * lands somewhere real instead of failing both checks and looping between
+ * /teacher and /dashboard forever.
  */
-export function canAccessSchoolArea(role: UserRole): boolean {
-  return isSchoolRole(role) || role === UserRole.ADMIN;
+export function canAccessSchoolArea(role: UserRole, tenantType?: string | null): boolean {
+  if (role === UserRole.ADMIN || isSchoolRole(role)) return true;
+  if (role === UserRole.CONTENT_EDITOR) return tenantType !== "AIRPORT";
+  return false;
 }
 
-export function canAccessAirportArea(role: UserRole): boolean {
-  return isAirportRole(role) || role === UserRole.ADMIN;
+export function canAccessAirportArea(role: UserRole, tenantType?: string | null): boolean {
+  if (role === UserRole.ADMIN || isAirportRole(role)) return true;
+  if (role === UserRole.CONTENT_EDITOR) return tenantType === "AIRPORT";
+  return false;
 }
 
 /**
  * Single source of truth for "where does this role land after login."
  * Reused by /dashboard's redirect and by middleware's role<->route-group check.
- *
- * CONTENT_EDITOR has no confirmed tenant type yet (flagged as an open
- * follow-up) - defaults to the school group until that's decided.
+ * Must always agree with canAccessSchoolArea/canAccessAirportArea above for
+ * the same (role, tenantType) pair, or a mismatched role can redirect-loop
+ * between /dashboard and its own "home."
  */
-export function roleHomePath(role: UserRole): string {
+export function roleHomePath(role: UserRole, tenantType?: string | null): string {
   if (role === UserRole.ADMIN) return "/admin";
   if (isAirportRole(role)) return "/ops";
+  if (role === UserRole.CONTENT_EDITOR) return tenantType === "AIRPORT" ? "/ops" : "/teacher";
   return "/teacher";
 }

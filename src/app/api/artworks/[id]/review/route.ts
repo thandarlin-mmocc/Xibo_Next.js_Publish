@@ -3,7 +3,7 @@ import { canReviewArtwork, tenantWhere } from "@/lib/authz";
 import { logAudit, requestMeta } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { generateVotingQrCode } from "@/lib/voteQr";
-import { publishArtwork, resolveArtworkImagePath } from "@/lib/xiboPublish";
+import { publishArtwork } from "@/lib/xiboPublish";
 import { ArtworkStatus, AuditAction } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -124,8 +124,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     // retry (ensureMediaUploaded is idempotent via xiboMediaId).
     let autoPublish: { mediaId: number; targets: unknown[] } | { error: string } | null = null;
     try {
-      const absolutePath = await resolveArtworkImagePath(artwork);
-      autoPublish = await publishArtwork(artwork, absolutePath);
+      autoPublish = await publishArtwork(artwork);
     } catch (publishError: any) {
       autoPublish = { error: publishError?.message ?? String(publishError) };
     }

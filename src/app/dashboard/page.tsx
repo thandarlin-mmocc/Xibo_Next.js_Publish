@@ -10,5 +10,5 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  redirect(roleHomePath(session.user.role));
+  redirect(roleHomePath(session.user.role, session.user.tenantType));
 }

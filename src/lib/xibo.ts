@@ -1,8 +1,6 @@
 import axios from "axios";
 import FormData from "form-data";
-import fs from "fs";
 import https from "https";
-import path from "path";
 
 const ALLOW_INSECURE_TLS = process.env.XIBO_ALLOW_INSECURE_TLS === "true";
 if (ALLOW_INSECURE_TLS) {
@@ -84,10 +82,17 @@ export async function findMediaIdByName(name: string): Promise<number | null> {
 }
 
 /**
- * Upload a file revealing the intended media "name" (deterministic).
- * If the same name already exists, you can search and reuse it.
+ * Upload media (as a buffer, not a local file path - the source may be
+ * local disk in dev or a remote Blob/S3 URL in production, see
+ * xiboPublish.ts's resolveArtworkImageBuffer) revealing the intended media
+ * "name" (deterministic). If the same name already exists, you can search
+ * and reuse it.
  */
-export async function uploadToXiboLibrary(filePath: string, mediaName: string) {
+export async function uploadToXiboLibrary(
+  buffer: Buffer,
+  mediaName: string,
+  ext = ".jpg",
+) {
   const token = await getAccessToken();
 
   const form = new FormData();
@@ -96,9 +101,7 @@ export async function uploadToXiboLibrary(filePath: string, mediaName: string) {
   form.append("name", mediaName);
   form.append("name[]", mediaName);
 
-  const ext = path.extname(filePath) || ".jpg";
-
-  form.append("files[]", fs.createReadStream(filePath), {
+  form.append("files[]", buffer, {
     filename: `${mediaName}${ext}`, // unique upload filename
   });
 

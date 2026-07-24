@@ -117,6 +117,7 @@ model Tenant {
   ToiletIssue        ToiletIssue[]
   ToiletCleaningLog  ToiletCleaningLog[]
   XiboDisplayHealth  XiboDisplayHealth[]
+  PublishTarget      PublishTarget[]
 }
 
 
@@ -274,7 +275,8 @@ model PublishTarget {
   id        String  @id @default(cuid())
   artworkId String
   artwork   Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
-tenantId    String            // Fixed: Added for multi-tenant safety
+  tenantId   String            // Fixed: Added for multi-tenant safety
+  tenant     Tenant            @relation(fields: [tenantId], references: [id])
   targetType PublishTargetType // Type of Xibo target: PLAYLIST, DISPLAY_GROUP, or LAYOUT_REGION
   targetId   String // Xibo ID (playlistId, displayGroupId, etc.) stored as string for flexibility
   duration   Int               @default(10) // Display duration in seconds for each artwork in the loop

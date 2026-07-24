@@ -2,15 +2,44 @@ import { prisma } from "@/lib/prisma";
 import { Artwork, AuditAction, PublishTargetType } from "@prisma/client";
 import { assignToPlaylist, uploadToXiboLibrary } from "@/lib/xibo";
 import { logAudit } from "@/lib/audit";
+import axios from "axios";
 import fs from "fs/promises";
 import path from "path";
 
-/** Resolves an artwork's stored imagePath to an absolute path, verifying it exists on disk. */
-export async function resolveArtworkImagePath(artwork: Artwork): Promise<string> {
-  const relPath = (artwork.imagePath ?? "").replace(/^\/+/, "");
+export class ArtworkImageNotFoundError extends Error {}
+
+/**
+ * Reads an artwork's image into a buffer, regardless of where it's stored -
+ * imagePath is a local /uploads/... path in local dev (see src/lib/storage.ts's
+ * fallback) or an absolute Blob/S3 URL once cloud storage is configured. Xibo
+ * only ever gets a buffer either way; it doesn't know or care which backend
+ * served it.
+ */
+async function resolveArtworkImageBuffer(
+  artwork: Artwork,
+): Promise<{ buffer: Buffer; ext: string }> {
+  const imagePath = artwork.imagePath ?? "";
+
+  if (/^https?:\/\//i.test(imagePath)) {
+    try {
+      const res = await axios.get(imagePath, { responseType: "arraybuffer" });
+      const ext = path.extname(new URL(imagePath).pathname) || ".jpg";
+      return { buffer: Buffer.from(res.data), ext };
+    } catch {
+      throw new ArtworkImageNotFoundError(
+        `Could not fetch artwork image from ${imagePath}`,
+      );
+    }
+  }
+
+  const relPath = imagePath.replace(/^\/+/, "");
   const absolutePath = path.join(process.cwd(), "public", relPath);
-  await fs.access(absolutePath); // throws if missing
-  return absolutePath;
+  try {
+    const buffer = await fs.readFile(absolutePath);
+    return { buffer, ext: path.extname(absolutePath) || ".jpg" };
+  } catch {
+    throw new ArtworkImageNotFoundError(`Artwork image not found at ${absolutePath}`);
+  }
 }
 
 type ResolvedTarget = {
@@ -76,14 +105,12 @@ export async function resolvePublishTargets(
  * mediaId (xiboMediaId) if this artwork was uploaded before - this is a
  * dedup/idempotency guard so re-publishing doesn't create duplicate media.
  */
-export async function ensureMediaUploaded(
-  artwork: Artwork,
-  absolutePath: string,
-): Promise<number> {
+export async function ensureMediaUploaded(artwork: Artwork): Promise<number> {
   if (artwork.xiboMediaId) return artwork.xiboMediaId;
 
+  const { buffer, ext } = await resolveArtworkImageBuffer(artwork);
   const mediaName = `artwork-${artwork.id}`;
-  const xiboUpload = await uploadToXiboLibrary(absolutePath, mediaName);
+  const xiboUpload = await uploadToXiboLibrary(buffer, mediaName, ext);
 
   const fileErr = xiboUpload?.files?.[0]?.error;
   if (fileErr) {
@@ -152,9 +179,8 @@ export type PublishTargetResult = {
  */
 export async function publishArtwork(
   artwork: Artwork,
-  absolutePath: string,
 ): Promise<{ mediaId: number; targets: PublishTargetResult[] }> {
-  const mediaId = await ensureMediaUploaded(artwork, absolutePath);
+  const mediaId = await ensureMediaUploaded(artwork);
   const targets = await resolvePublishTargets(artwork);
 
   const results: PublishTargetResult[] = [];

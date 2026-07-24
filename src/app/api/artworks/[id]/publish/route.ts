@@ -3,7 +3,7 @@ import { canPublishArtwork, tenantWhere } from "@/lib/authz";
 import { logAudit, requestMeta } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { ArtworkStatus, AuditAction } from "@prisma/client";
-import { publishArtwork, resolveArtworkImagePath } from "@/lib/xiboPublish";
+import { ArtworkImageNotFoundError, publishArtwork } from "@/lib/xiboPublish";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
@@ -47,17 +47,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    let absolutePath: string;
-    try {
-      absolutePath = await resolveArtworkImagePath(artwork);
-    } catch {
-      return NextResponse.json(
-        { error: "File not found on server", imagePath: artwork.imagePath },
-        { status: 400 },
-      );
-    }
-
-    const { mediaId, targets } = await publishArtwork(artwork, absolutePath);
+    const { mediaId, targets } = await publishArtwork(artwork);
 
     const anySucceeded = targets.some((t) => t.success);
     if (!anySucceeded) {
@@ -78,14 +68,23 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true, mediaId, targets });
   } catch (error: any) {
-    console.error("Publish failed:", error);
+    if (error instanceof ArtworkImageNotFoundError) {
+      return NextResponse.json(
+        { error: "Image not found on server", imagePath: error.message },
+        { status: 400 },
+      );
+    }
+
+    // Log the full upstream detail server-side only - never relay a raw
+    // Xibo/axios error body to the client, since it's unverified what an
+    // upstream error payload might contain.
+    const referenceId = `pub_${Date.now().toString(36)}`;
+    console.error(`Publish failed [${referenceId}]:`, error?.message, {
+      axiosStatus: error?.response?.status,
+      axiosData: error?.response?.data,
+    });
     return NextResponse.json(
-      {
-        error: "Publish failed",
-        message: error?.message,
-        axiosStatus: error?.response?.status,
-        axiosData: error?.response?.data,
-      },
+      { error: "Publish failed", referenceId },
       { status: 500 },
     );
   }

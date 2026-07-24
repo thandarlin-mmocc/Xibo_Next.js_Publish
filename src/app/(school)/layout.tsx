@@ -10,7 +10,7 @@ export default async function SchoolLayout({
 }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
-  if (!canAccessSchoolArea(session.user.role)) redirect("/dashboard");
+  if (!canAccessSchoolArea(session.user.role, session.user.tenantType)) redirect("/dashboard");
 
   return <>{children}</>;
 }

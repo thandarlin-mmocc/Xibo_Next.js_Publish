@@ -10,7 +10,7 @@ export default async function AirportLayout({
 }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
-  if (!canAccessAirportArea(session.user.role)) redirect("/dashboard");
+  if (!canAccessAirportArea(session.user.role, session.user.tenantType)) redirect("/dashboard");
 
   return <>{children}</>;
 }

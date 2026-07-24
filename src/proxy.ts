@@ -7,6 +7,7 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const role = token?.role as UserRole | undefined;
+    const tenantType = token?.tenantType as string | null | undefined;
     const pathname = req.nextUrl.pathname;
 
     if (!role) return NextResponse.next();
@@ -19,12 +20,12 @@ export default withAuth(
     // cross-tenant oversight, not just its own /admin corner.
     const allowed =
       role === UserRole.ADMIN ||
-      (inSchoolArea && canAccessSchoolArea(role)) ||
-      (inAirportArea && canAccessAirportArea(role)) ||
+      (inSchoolArea && canAccessSchoolArea(role, tenantType)) ||
+      (inAirportArea && canAccessAirportArea(role, tenantType)) ||
       (!inAdminArea && !inSchoolArea && !inAirportArea); // e.g. /dashboard
 
     if (!allowed) {
-      return NextResponse.redirect(new URL(roleHomePath(role), req.url));
+      return NextResponse.redirect(new URL(roleHomePath(role, tenantType), req.url));
     }
 
     return NextResponse.next();
