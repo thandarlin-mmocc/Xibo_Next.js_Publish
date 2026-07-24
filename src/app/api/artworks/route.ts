@@ -2,7 +2,7 @@ import { authOptions } from "@/lib/auth";
 import { canUploadArtwork, tenantWhere } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { ArtworkStatus } from "@prisma/client";
-import { put } from "@vercel/blob";
+import { saveUploadedFile } from "@/lib/storage";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 export const runtime = "nodejs";
@@ -66,21 +66,14 @@ export async function POST(request: Request) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const filename = `${Date.now()}_${file.name.replace(/\s/g, "_")}`;
-    // Vercel's serverless functions have a read-only filesystem (aside from
-    // ephemeral /tmp), so uploads go to Vercel Blob rather than local disk -
-    // this is the only storage backend change; nothing downstream cares
-    // whether imagePath is a local path or a Blob URL.
-    const blob = await put(`uploads/${filename}`, buffer, {
-      access: "public",
-      contentType: file.type || undefined,
-    });
+    const imagePath = await saveUploadedFile(buffer, filename, file.type || undefined);
 
     const artwork = await prisma.artwork.create({
       data: {
         tenantId: session.user.tenantId,
         title,
         studentName,
-        imagePath: blob.url,
+        imagePath,
         status: ArtworkStatus.PENDING,
       },
     });
