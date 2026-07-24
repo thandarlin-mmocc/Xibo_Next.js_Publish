@@ -1,40 +1,372 @@
+// prisma/schema.prisma
+// Works with PostgreSQL (recommended). You can switch provider if needed.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model School {
-  id           Int       @id @default(autoincrement())
-  code         String    @unique
-  passwordHash String
-  name         String
-  artworks     Artwork[]
+enum UserRole {
+  ADMIN // platform super admin
+  SCHOOL_ADMIN
+  TEACHER
+  STUDENT
+  AIRPORT_ADMIN
+  OPS
+  CONTENT_EDITOR
 }
-        
+
+enum ArtworkStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PUBLISHED
+  EXPIRED
+}
+
+enum PublishTargetType {
+  PLAYLIST
+  DISPLAY_GROUP
+  LAYOUT_REGION_PLAYLIST
+}
+
+enum ToiletIssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum FlightEventType {
+  GATE_CHANGE
+  BOARDING
+  FINAL_CALL
+  DELAY
+  CANCELLED
+}
+
+enum AuditAction {
+  LOGIN_SUCCESS
+  LOGIN_FAILURE
+  USER_CREATE
+  USER_DISABLE
+  USER_ROLE_CHANGE
+
+  ARTWORK_APPROVE
+  ARTWORK_REJECT
+  ARTWORK_PUBLISH
+
+  TOILET_ISSUE_CREATE
+  TOILET_ISSUE_RESOLVE
+  TOILET_CLEAN
+
+  FLIGHT_SUBSCRIBE
+  FLIGHT_UNSUBSCRIBE
+  FLIGHT_SNAPSHOT_UPDATE
+
+  XIBO_SYNC_SUCCESS
+  XIBO_SYNC_ERROR
+}
 model User {
-  id           Int     @id @default(autoincrement())
-  schoolId     Int?
-  role         String  // "teacher", "admin"
-  username     String  @unique
-  passwordHash String
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String? // null for OAuth users
+  role         UserRole
+  tenantId     String?
+  locale       String? // per-user UI language override (falls back to tenant.locale, then "en")
+
+  isActive Boolean @default(true)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  lastLoginAt DateTime?
+
+  // NextAuth relations
+  accounts AuthAccount[]
+  sessions Session[]
+  votes    Vote[]
+
+  // Your existing relations
+  approvedArtworks    Artwork[]            @relation("ApprovedBy")
+  flightSubscriptions FlightSubscription[] @relation("UserFlightSubscriptions")
+  AuditLog            AuditLog[]
+  tenant              Tenant?              @relation(fields: [tenantId], references: [id])
+
+  @@index([role])
+  @@index([email])
+}
+
+model Tenant {
+  id                 String               @id @default(cuid())
+  name               String
+  type               String // "SCHOOL" or "AIRPORT"
+  locale             String               @default("en") // default UI/display language for this tenant's users and public pages
+  timezone           String               @default("Asia/Tokyo") // IANA name - resolves "9am" per-tenant, not per-server
+  users              User[]
+  artworks           Artwork[]
+  createdAt          DateTime             @default(now())
+  deletedAt          DateTime?
+  Vote               Vote[]
+  AuditLog           AuditLog[]
+  FlightSubscription FlightSubscription[]
+  ToiletIssue        ToiletIssue[]
+  ToiletCleaningLog  ToiletCleaningLog[]
+  XiboDisplayHealth  XiboDisplayHealth[]
+}
+
+
+
+model AuthAccount {
+  id                String @id @default(cuid())
+  userId            String
+  type              String // "credentials" | "oauth"
+  provider          String // "credentials" | "google" | "github"
+  providerAccountId String
+
+  refresh_token String?
+  access_token  String?
+  expires_at    Int?
+  token_type    String?
+  scope         String?
+  id_token      String?
+  session_state String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model AuditLog {
+  id     String      @id @default(cuid())
+  action AuditAction
+
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  target   String? // e.g. "User:12", "Artwork:55", "Toilet:T1-L2-03"
+  metadata Json?
+
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  tenantId  String?
+  tenant    Tenant?   @relation(fields: [tenantId], references: [id])
+
+  @@index([action, createdAt])
+  @@index([actorId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Vote {
+  id           String   @id @default(cuid())
+  userId       String? // null for anonymous/parent votes - only set for a logged-in voter
+  artworkId    String
+  tenantId     String?
+  voterIp      String? // recorded for abuse monitoring only, not used to block votes (shared school/airport wifi)
+  voterSession String? // long-lived random id from a cookie - the actual anonymous dedup key
+  createdAt    DateTime @default(now())
+
+  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artwork Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  tenant  Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@unique([userId, artworkId])
+  @@unique([artworkId, voterSession])
+  @@index([userId])
+  @@index([artworkId])
+  @@index([tenantId])
+}
+
+model FlightSubscription {
+  id          String    @id @default(cuid())
+  flightKey   String
+  airportCode String?
+  locale      String    @default("en")
+  pushSub     Json?
+  phoneE164   String?
+  smsVerified Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  expiresAt   DateTime
+  tenantId    String?
+  userId      String?
+  user        User?     @relation("UserFlightSubscriptions", fields: [userId], references: [id], onDelete: SetNull)
+
+  events NotificationEvent[]
+  tenant Tenant?             @relation(fields: [tenantId], references: [id])
+
+  @@index([flightKey, isActive])
+  @@index([expiresAt])
+  @@index([phoneE164])
 }
 
 model Artwork {
-  id           Int       @id @default(autoincrement())
-  schoolId     Int
-  title        String
-  nickname     String
-  imagePath    String
-  status       String    @default("pending") // "pending", "approved", "rejected"
-  rejectReason String?
-  createdAt    DateTime  @default(now())
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  grade       String?
+  className   String?
+  studentName String?
+  imagePath   String // Local storage path or URL of the resized image (~1080p) for Xibo
+  votingQrUrl String? // Store QR code URL for voting, generated after artwork approval
+  status      ArtworkStatus @default(PENDING) // Approval workflow: PENDING -> APPROVED/REJECTED -> PUBLISHED
+  rejectReason String? // Reason recorded when status is set to REJECTED
+// New: Metadata for Xibo Optimization
+  width        Int?
+  height       Int?
+  fileSize     Int?          // in bytes
   approvedAt   DateTime?
-  xiboMediaId  Int?
+  approvedById String?
+  approvedBy   User?     @relation("ApprovedBy", fields: [approvedById], references: [id])
 
-  school       School    @relation(fields: [schoolId], references: [id])
+  publishedAt    DateTime?
+  expiresAt      DateTime?
+  xiboMediaId    Int? // Media ID returned from Xibo CMS after upload
+  xiboPlaylistId Int?
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  tenantId       String?
+  votes          Vote[]
+  publishTargets PublishTarget[]
+  tenant         Tenant?         @relation(fields: [tenantId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([xiboMediaId])
+}
+
+model PublishTarget {
+  id        String  @id @default(cuid())
+  artworkId String
+  artwork   Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+tenantId    String            // Fixed: Added for multi-tenant safety
+  targetType PublishTargetType // Type of Xibo target: PLAYLIST, DISPLAY_GROUP, or LAYOUT_REGION
+  targetId   String // Xibo ID (playlistId, displayGroupId, etc.) stored as string for flexibility
+  duration   Int               @default(10) // Display duration in seconds for each artwork in the loop
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, targetId])
+  @@index([artworkId])
+}
+
+model FlightSnapshot {
+  id        Int    @id @default(autoincrement())
+  flightKey String @unique
+
+  // normalized fields
+  airline  String?
+  flightNo String?
+  status   String? // Current status: "SCHEDULED" | "BOARDING" | "DELAYED" | "DEPARTED" | "CANCELLED" 
+  gate     String?
+
+  scheduledTime DateTime?
+  estimatedTime DateTime?
+  actualTime    DateTime?
+
+  delayMinutes Int?
+
+  providerName      String
+  providerRaw       Json? // Original JSON response from Flight API for debugging and RCA (Root Cause Analysis)
+  providerUpdatedAt DateTime?
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model NotificationEvent {
+  id             String             @id @default(cuid())
+  subscriptionId String
+  subscription   FlightSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscribedFrom String? // e.g. "ENTRANCE_A_QR", "TOILET_GATE_22_QR"
+  flightKey      String
+  type           FlightEventType // Type of alert: GATE_CHANGE, DELAY, BOARDING, etc.
+  eventKey       String // Deduplication key: e.g., "GATE_CHANGE:22" or "DELAY:35" to prevent double alerts
+  message        String?
+  payload        Json?
+
+  createdAt DateTime @default(now())
+
+  @@unique([subscriptionId, eventKey])
+  @@index([flightKey, createdAt])
+}
+
+model ToiletIssue {
+  id         Int               @id @default(autoincrement())
+  locationId String // Unique location code: e.g., "T1-L2-MALE-03" (Terminal 1, Level 2)
+  type       String // Issue category: "NO_TISSUE" | "SMELL" | "LEAK" | "DIRTY"
+  note       String?
+  status     ToiletIssueStatus @default(OPEN)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  resolvedAt DateTime?
+  tenantId   String?
+  tenant     Tenant?   @relation(fields: [tenantId], references: [id])
+
+  @@index([locationId, status])
+  @@index([createdAt])
+}
+
+model ToiletCleaningLog {
+  id         Int      @id @default(autoincrement())
+  locationId String
+  cleanedAt  DateTime @default(now())
+  cleanedBy  String? // Staff name or ID who performed the cleaning task
+  tenantId   String?
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@index([locationId, cleanedAt])
+}
+
+model XiboDisplayHealth {
+  id             Int       @id @default(autoincrement())
+  displayId      String    @unique
+  displayName    String?
+  displayGroupId String?
+  status         String? // Xibo Player status: "ONLINE" | "OFFLINE" | "DOWNLOAD_IN_PROGRESS"
+  lastSeenAt     DateTime? // The last time the Xibo Player checked in with the CMS
+  lastSyncAt     DateTime?
+  deletedAt      DateTime?
+
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }

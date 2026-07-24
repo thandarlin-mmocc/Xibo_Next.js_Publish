@@ -1,0 +1,14 @@
+{
+  "name": "Staff Cleaning Log",
+  "short_name": "Cleaning Log",
+  "description": "Airport facilities staff tablet mode - log completed restroom cleanings.",
+  "start_url": "/ops/toilets/clean",
+  "scope": "/ops/toilets",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

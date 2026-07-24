@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "AuditAction" ADD VALUE 'FLIGHT_SNAPSHOT_UPDATE';

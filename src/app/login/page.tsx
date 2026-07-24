@@ -1,136 +1,154 @@
-'use client'
+"use client";
 
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { User, School, ArrowRight, Video } from 'lucide-react'
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useLocale } from "@/components/providers/LocaleProvider";
+import { ArrowRight, MonitorPlay, PlaneTakeoff, School } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPage() {
-    const router = useRouter()
-    const [type, setType] = useState<'teacher' | 'admin'>('teacher')
-    const [formData, setFormData] = useState({ code: '', username: '', password: '' })
-    const [error, setError] = useState('')
-    const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const { t } = useLocale();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setError('')
-        setLoading(true)
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-        const credentials = type === 'teacher'
-            ? { code: formData.code, password: formData.password }
-            : { username: formData.username, password: formData.password }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type, credentials }),
-        })
+    try {
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
 
-        if (res.ok) {
-            const data = await res.json()
-            if (data.user.role === 'teacher') router.push('/teacher')
-            else router.push('/admin')
-        } else {
-            const data = await res.json()
-            setError(data.error === 'Invalid school code or password' ? '学校コードまたはパスワードが正しくありません' :
-                data.error === 'Invalid admin credentials' ? '管理者IDまたはパスワードが正しくありません' : 'ログインに失敗しました')
-            setLoading(false)
-        }
+      if (result?.error) {
+        setError(t("login.errorInvalid"));
+        setLoading(false);
+        return;
+      }
+
+      if (result?.ok) {
+        // Dashboard resolves the actual redirect server-side via
+        // getServerSession + role, which is more secure than deciding here.
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch {
+      setError(t("login.errorGeneric"));
+      setLoading(false);
     }
+  };
 
-    return (
-        <div className="min-h-screen bg-gradient-premium flex items-center justify-center p-4">
-            <div className="glass-panel p-10 rounded-2xl shadow-2xl w-full max-w-md backdrop-blur-xl animate-fade-in relative overflow-hidden">
-                {/* Decorative background element inside card */}
-                <div className="absolute -top-20 -left-20 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-                <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-
-                <div className="flex flex-col items-center mb-8 relative z-10">
-                    <div className="bg-white/20 p-3 rounded-full mb-4 shadow-inner">
-                        <Video className="w-8 h-8 text-blue-600" />
-                    </div>
-                    <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">Xibo PoC</h1>
-                    <p className="text-gray-500 text-sm mt-1">デジタルサイネージ管理システム</p>
-                </div>
-
-                <div className="flex mb-8 bg-gray-100/50 p-1 rounded-lg backdrop-blur-sm relative z-10">
-                    <button
-                        className={`flex-1 flex items-center justify-center py-2 rounded-md text-sm font-medium transition-all duration-300 ${type === 'teacher' ? 'bg-white text-blue-600 shadow-sm transform scale-105' : 'text-gray-500 hover:text-gray-700'}`}
-                        onClick={() => setType('teacher')}
-                    >
-                        <School className="w-4 h-4 mr-2" />
-                        学校職員
-                    </button>
-                    <button
-                        className={`flex-1 flex items-center justify-center py-2 rounded-md text-sm font-medium transition-all duration-300 ${type === 'admin' ? 'bg-white text-blue-600 shadow-sm transform scale-105' : 'text-gray-500 hover:text-gray-700'}`}
-                        onClick={() => setType('admin')}
-                    >
-                        <User className="w-4 h-4 mr-2" />
-                        管理者
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-                    {type === 'teacher' ? (
-                        <div className="space-y-2">
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">学校コード</label>
-                            <input
-                                type="text"
-                                className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-800 placeholder-gray-400"
-                                value={formData.code}
-                                onChange={e => setFormData({ ...formData, code: e.target.value })}
-                                required
-                                placeholder="SCH001"
-                            />
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">管理者ID</label>
-                            <input
-                                type="text"
-                                className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-800 placeholder-gray-400"
-                                value={formData.username}
-                                onChange={e => setFormData({ ...formData, username: e.target.value })}
-                                required
-                                placeholder="admin"
-                            />
-                        </div>
-                    )}
-
-                    <div className="space-y-2">
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">パスワード</label>
-                        <input
-                            type="password"
-                            className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-800 placeholder-gray-400"
-                            value={formData.password}
-                            onChange={e => setFormData({ ...formData, password: e.target.value })}
-                            required
-                            placeholder="••••••••"
-                        />
-                    </div>
-
-                    {error && (
-                        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center animate-pulse">
-                            <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-                            {error}
-                        </div>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-bold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? (
-                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        ) : (
-                            <>
-                                ログイン <ArrowRight className="ml-2 w-4 h-4" />
-                            </>
-                        )}
-                    </button>
-                </form>
-            </div>
+  return (
+    <div className="min-h-screen flex">
+      {/* Brand panel */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 text-white p-12 flex-col justify-between overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        <div className="relative flex items-center gap-2">
+          <MonitorPlay className="w-7 h-7" />
+          <span className="text-xl font-extrabold tracking-tight">{t("login.brand")}</span>
         </div>
-    )
+
+        <div className="relative space-y-6">
+          <h1 className="text-4xl font-extrabold leading-tight text-balance">
+            {t("login.welcome")}
+          </h1>
+          <p className="text-blue-100 text-lg max-w-sm">{t("login.subtitle")}</p>
+          <div className="flex gap-4 pt-2">
+            <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 backdrop-blur-sm">
+              <School className="w-5 h-5 text-blue-200" />
+              <span className="text-sm font-medium">Schools</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 backdrop-blur-sm">
+              <PlaneTakeoff className="w-5 h-5 text-blue-200" />
+              <span className="text-sm font-medium">Airports</span>
+            </div>
+          </div>
+        </div>
+
+        <p className="relative text-sm text-blue-200">{t("login.footer")}</p>
+      </div>
+
+      {/* Form panel */}
+      <div className="flex-1 flex flex-col bg-gray-50">
+        <div className="flex justify-between items-center p-6 lg:justify-end">
+          <div className="lg:hidden flex items-center gap-2 text-gray-900">
+            <MonitorPlay className="w-6 h-6 text-blue-600" />
+            <span className="font-extrabold">{t("login.brand")}</span>
+          </div>
+          <LanguageSwitcher />
+        </div>
+
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="w-full max-w-sm">
+            <div className="mb-8 lg:hidden">
+              <h1 className="text-2xl font-bold text-gray-900">{t("login.welcome")}</h1>
+              <p className="text-gray-500 mt-1 text-sm">{t("login.tagline")}</p>
+            </div>
+            <div className="hidden lg:block mb-8">
+              <h2 className="text-2xl font-bold text-gray-900">{t("login.tagline")}</h2>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 ml-1">
+                  {t("login.emailLabel")}
+                </label>
+                <input
+                  type="email"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 placeholder-gray-400 bg-white"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  placeholder={t("login.emailPlaceholder")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 ml-1">
+                  {t("login.passwordLabel")}
+                </label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 placeholder-gray-400 bg-white"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  placeholder={t("login.passwordPlaceholder")}
+                />
+              </div>
+
+              {error && (
+                <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? t("login.signingIn") : t("login.signIn")}
+                {!loading && <ArrowRight className="w-5 h-5" />}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -1,12 +1,14 @@
+import { authOptions } from "@/lib/auth";
+import { canUploadArtwork, tenantWhere } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/session";
-import { mkdir, writeFile } from "fs/promises";
+import { ArtworkStatus } from "@prisma/client";
+import { put } from "@vercel/blob";
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import path from "path";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const session = await getSession();
+  const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -15,17 +17,17 @@ export async function GET(request: Request) {
   const status = searchParams.get("status");
 
   try {
-    const whereClause: any = {};
-    if (session.role === "teacher") {
-      whereClause.schoolId = session.schoolId;
-    }
-    if (status) {
-      whereClause.status = status;
+    const whereClause: any = { ...tenantWhere(session.user) };
+    if (
+      status &&
+      Object.values(ArtworkStatus).includes(status as ArtworkStatus)
+    ) {
+      whereClause.status = status as ArtworkStatus;
     }
 
     const artworks = await prisma.artwork.findMany({
       where: whereClause,
-      include: { school: true },
+      include: { tenant: true },
       orderBy: { createdAt: "desc" },
     });
 
@@ -40,35 +42,46 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session || session.role !== "teacher") {
+  const session = await getServerSession(authOptions);
+  if (!session || !canUploadArtwork(session.user.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!session.user.tenantId) {
+    return NextResponse.json(
+      { error: "User has no tenant assigned" },
+      { status: 400 }
+    );
   }
 
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const title = formData.get("title") as string;
-    const nickname = formData.get("nickname") as string;
+    const studentName = formData.get("nickname") as string;
 
-    if (!file || !title || !nickname) {
+    if (!file || !title || !studentName) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const filename = `${Date.now()}_${file.name.replace(/\s/g, "_")}`;
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-    await mkdir(uploadDir, { recursive: true });
-    const filepath = path.join(uploadDir, filename);
-    await writeFile(filepath, buffer);
+    // Vercel's serverless functions have a read-only filesystem (aside from
+    // ephemeral /tmp), so uploads go to Vercel Blob rather than local disk -
+    // this is the only storage backend change; nothing downstream cares
+    // whether imagePath is a local path or a Blob URL.
+    const blob = await put(`uploads/${filename}`, buffer, {
+      access: "public",
+      contentType: file.type || undefined,
+    });
 
     const artwork = await prisma.artwork.create({
       data: {
-        schoolId: session.schoolId,
+        tenantId: session.user.tenantId,
         title,
-        nickname,
-        imagePath: `/uploads/${filename}`,
-        status: "pending",
+        studentName,
+        imagePath: blob.url,
+        status: ArtworkStatus.PENDING,
       },
     });
 

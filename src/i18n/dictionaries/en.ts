@@ -1,0 +1,153 @@
+/**
+ * Canonical dictionary - every key the app uses must exist here with a real
+ * value. ja/my/vi are allowed to be incomplete; getDictionary() falls back
+ * to this file key-by-key, so a missing translation shows English rather
+ * than a blank string, and a missing key in *this* file shows the raw key
+ * itself (the last-resort fallback).
+ */
+const en = {
+  "common.appName": "OCC Xibo",
+  "common.loading": "Loading...",
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "common.logout": "Log out",
+  "common.language": "Language",
+  "common.gridView": "Grid view",
+  "common.largeView": "Large view",
+  "common.download": "Download",
+
+  "nav.centralAdmin": "Central Admin",
+  "nav.teacherDashboard": "Teacher Dashboard",
+  "nav.airportOps": "Airport Ops",
+  "nav.restroomOps": "Restroom Ops",
+  "nav.roleAdmin": "Administrator",
+  "nav.roleTeacher": "School Staff",
+  "nav.roleOps": "Airport Operations",
+
+  "login.brand": "OCC Xibo",
+  "login.tagline": "Sign in to manage your displays",
+  "login.welcome": "Welcome back",
+  "login.subtitle": "One platform for every screen - schools and airports alike.",
+  "login.emailLabel": "Email",
+  "login.emailPlaceholder": "you@example.com",
+  "login.passwordLabel": "Password",
+  "login.passwordPlaceholder": "••••••••",
+  "login.signIn": "Sign In",
+  "login.signingIn": "Signing in...",
+  "login.errorInvalid": "Invalid email or password.",
+  "login.errorGeneric": "Something went wrong. Please try again.",
+  "login.footer": "School & airport digital signage platform",
+
+  "status.pending": "Pending",
+  "status.approved": "Approved",
+  "status.rejected": "Rejected",
+
+  "action.approve": "Approve",
+  "action.reject": "Reject",
+  "action.start": "Start",
+  "action.resolve": "Resolve",
+
+  "flightStatus.scheduled": "Scheduled",
+  "flightStatus.boarding": "Boarding",
+  "flightStatus.delayed": "Delayed",
+  "flightStatus.departed": "Departed",
+  "flightStatus.cancelled": "Cancelled",
+
+  "issueStatus.open": "Open",
+  "issueStatus.inProgress": "In Progress",
+  "issueStatus.resolved": "Resolved",
+
+  "issueType.noTissue": "No tissue paper",
+  "issueType.smell": "Bad smell",
+  "issueType.leak": "Water leak",
+  "issueType.dirty": "Needs cleaning",
+
+  "artwork.createdByLabel": "Created by:",
+
+  "teacher.uploadPanelTitle": "Upload Artwork",
+  "teacher.imageFileLabel": "Image file",
+  "teacher.clickToSelect": "Click to select",
+  "teacher.artworkTitleLabel": "Artwork title",
+  "teacher.artworkTitlePlaceholder": "e.g. Summer vacation memories",
+  "teacher.nicknameLabel": "Nickname (student name)",
+  "teacher.nicknamePlaceholder": "e.g. Taro",
+  "teacher.uploadButton": "Upload",
+  "teacher.uploadFailedAlert": "Upload failed",
+  "teacher.uploadedListTitle": "Uploaded Artworks",
+  "teacher.rejectReasonLabel": "Rejection reason",
+  "teacher.emptyState": "No artworks yet",
+
+  "adminOverview.title": "Cross-Tenant Overview",
+  "adminOverview.subtitle": "Every school and airport tenant, from one place.",
+  "adminOverview.flightsNeedAttention": "flight(s) need attention (boarding, delayed, or cancelled).",
+  "adminOverview.viewFlightBoard": "View flight board",
+  "adminOverview.noPendingApprovals": "No pending approvals",
+  "adminOverview.pendingApprovals": "pending approval(s)",
+  "adminOverview.noOpenIssues": "No open facility issues",
+  "adminOverview.openIssues": "open facility issue(s)",
+  "adminOverview.flightBoardLink": "Flight board",
+  "adminOverview.noTenants": "No tenants yet.",
+
+  "adminArtworks.overviewLink": "Overview",
+  "adminArtworks.confirmApprove": "Approve this artwork?",
+  "adminArtworks.confirmReject": "Reject this artwork?",
+  "adminArtworks.filterRejected": "Rejected artworks",
+  "adminArtworks.rejectPrompt": "Please enter a rejection reason:",
+  "adminArtworks.reasonLabel": "Reason:",
+  "adminArtworks.publishedLabel": "Approved & Published",
+  "adminArtworks.publishButton": "Publish to Xibo",
+  "adminArtworks.confirmPublish": "Publish to Xibo?",
+  "adminArtworks.votingQrAlt": "Voting QR code",
+  "adminArtworks.votingQrLabel": "Voting QR code",
+  "adminArtworks.clickToDownload": "Click to download",
+  "adminArtworks.emptyState": "No matching artworks",
+
+  "ops.updateFlightTitle": "Update Flight",
+  "ops.flightKeyLabel": "Flight key (unique, e.g. NH123-2026-07-21)",
+  "ops.airlineLabel": "Airline",
+  "ops.flightNoLabel": "Flight No.",
+  "ops.statusLabel": "Status",
+  "ops.gateLabel": "Gate",
+  "ops.scheduledTimeLabel": "Scheduled time",
+  "ops.delayMinutesLabel": "Delay (minutes)",
+  "ops.saveFlightButton": "Save Flight",
+  "ops.viewFidsLink": "View public FIDS display",
+  "ops.flightBoardTitle": "Flight Board",
+  "ops.colFlight": "Flight",
+  "ops.colScheduled": "Scheduled",
+  "ops.noFlights": "No flights entered yet.",
+  "ops.saveFlightFailed": "Failed to save flight",
+
+  "toilets.openCleaningModeLink": "Open staff cleaning mode",
+  "toilets.noIssuesTemplate": "No {status} issues.",
+  "toilets.generateQrTitle": "Generate Report QR",
+  "toilets.generateButton": "Generate",
+
+  "clean.title": "Cleaning Log",
+  "clean.neverCleaned": "Never cleaned",
+  "clean.justNow": "Just now",
+  "clean.minutesAgo": "{m}m ago",
+  "clean.hoursAgo": "{h}h ago",
+  "clean.loggedConfirmation": "Logged!",
+  "clean.newLocationPlaceholder": "New location code, e.g. T1-L2-MALE-03",
+  "clean.logButton": "Log",
+
+  "vote.pageTitle": "Artwork Voting",
+  "vote.byLabel": "By:",
+  "vote.otherArtworksTitle": "Vote for other artworks too",
+  "vote.voteFailed": "Vote failed",
+  "vote.thankedLabel": "Thanks for voting!",
+  "vote.voteButtonLabel": "Vote for this artwork",
+  "vote.voteCountSuffix": "votes",
+
+  "report.pageTitle": "Restroom Feedback",
+  "report.locationLabel": "Location:",
+  "report.submitFailed": "Failed to submit report",
+  "report.thankYou": "Thank you for reporting.",
+  "report.staffNotified": "Staff have been notified.",
+  "report.notePlaceholder": "Additional details (optional)",
+};
+
+export default en;
+export type Dictionary = typeof en;
+export type TranslationKey = keyof Dictionary;
