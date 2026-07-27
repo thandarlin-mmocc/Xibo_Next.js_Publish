@@ -47,6 +47,10 @@ export function canManageFacilities(role: UserRole): boolean {
   );
 }
 
+export function canManageUsers(role: UserRole): boolean {
+  return role === UserRole.ADMIN;
+}
+
 const SCHOOL_ROLES: UserRole[] = [
   UserRole.SCHOOL_ADMIN,
   UserRole.TEACHER,
