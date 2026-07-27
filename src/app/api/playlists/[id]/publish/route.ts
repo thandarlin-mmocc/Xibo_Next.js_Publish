@@ -24,7 +24,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const playlist = await prisma.playlist.findFirst({
-    where: { id: playlistId, ...tenantWhere(session.user) },
+    where: { id: playlistId, ...tenantWhere(session.user), deletedAt: null },
   });
   if (!playlist) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

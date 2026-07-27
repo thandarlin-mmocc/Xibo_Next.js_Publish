@@ -3,7 +3,8 @@
 import AppShell from "@/components/layout/AppShell";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { MediaType } from "@prisma/client";
-import { Loader2, Plus, Send, Trash2, X } from "lucide-react";
+import { Check, Loader2, Pencil, Plus, Send, Trash2, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 type MediaAsset = {
@@ -11,6 +12,8 @@ type MediaAsset = {
   type: MediaType;
   title: string;
 };
+
+type Tenant = { id: string; name: string; type: string };
 
 type PlaylistItem = {
   id: string;
@@ -28,14 +31,21 @@ type Playlist = {
 
 export default function PlaylistsPage() {
   const { t, formatDateTime, formatNumber } = useLocale();
+  const { data: sessionData } = useSession();
+  const isAdmin = sessionData?.user?.role === "ADMIN";
+
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [media, setMedia] = useState<MediaAsset[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
+  const [newTenantId, setNewTenantId] = useState("");
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [selectedMediaId, setSelectedMediaId] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   const fetchAll = async () => {
     setLoading(true);
@@ -52,17 +62,38 @@ export default function PlaylistsPage() {
     fetchAll();
   }, []);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetch("/api/tenants")
+      .then((res) => (res.ok ? res.json() : []))
+      .then(setTenants);
+  }, [isAdmin]);
+
+  // Opening a different playlist's "add media" picker must never carry over
+  // a media item selected for a previous playlist - otherwise clicking Save
+  // right after switching silently adds the wrong item.
+  const openPicker = (playlistId: string) => {
+    setSelectedMediaId("");
+    setPickerFor(playlistId);
+  };
+  const closePicker = () => {
+    setSelectedMediaId("");
+    setPickerFor(null);
+  };
+
   const createPlaylist = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
+    if (isAdmin && !newTenantId) return;
     setCreating(true);
     const res = await fetch("/api/playlists", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName.trim() }),
+      body: JSON.stringify({ name: newName.trim(), ...(isAdmin ? { tenantId: newTenantId } : {}) }),
     });
     if (res.ok) {
       setNewName("");
+      setNewTenantId("");
       fetchAll();
     } else {
       const data = await res.json().catch(() => ({}));
@@ -78,6 +109,27 @@ export default function PlaylistsPage() {
     else alert(t("playlists.deleteFailed"));
   };
 
+  const startRename = (p: Playlist) => {
+    setEditingId(p.id);
+    setEditingName(p.name);
+  };
+
+  const saveRename = async (id: string) => {
+    if (!editingName.trim()) return;
+    const res = await fetch(`/api/playlists/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: editingName.trim() }),
+    });
+    if (res.ok) {
+      setEditingId(null);
+      fetchAll();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error ?? t("playlists.renameFailed"));
+    }
+  };
+
   const addItem = async (playlistId: string) => {
     if (!selectedMediaId) return;
     const res = await fetch(`/api/playlists/${playlistId}/items`, {
@@ -86,8 +138,7 @@ export default function PlaylistsPage() {
       body: JSON.stringify({ mediaAssetId: selectedMediaId, durationSeconds: 10 }),
     });
     if (res.ok) {
-      setPickerFor(null);
-      setSelectedMediaId("");
+      closePicker();
       fetchAll();
     } else {
       const data = await res.json().catch(() => ({}));
@@ -121,6 +172,21 @@ export default function PlaylistsPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-xl font-bold text-gray-900">{t("playlists.pageTitle")}</h1>
         <form onSubmit={createPlaylist} className="flex gap-2">
+          {isAdmin && (
+            <select
+              value={newTenantId}
+              onChange={(e) => setNewTenantId(e.target.value)}
+              required
+              className="p-2 border border-gray-300 rounded-lg text-black text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            >
+              <option value="">{t("users.tenantLabel")}</option>
+              {tenants.map((tn) => (
+                <option key={tn.id} value={tn.id}>
+                  {tn.name}
+                </option>
+              ))}
+            </select>
+          )}
           <input
             type="text"
             value={newName}
@@ -148,7 +214,33 @@ export default function PlaylistsPage() {
             <div key={p.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="font-bold text-lg text-gray-900">{p.name}</h3>
+                  {editingId === p.id ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        autoFocus
+                        className="font-bold text-lg text-gray-900 border border-blue-300 rounded-lg px-2 py-0.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                      <button onClick={() => saveRename(p.id)} className="text-green-600 hover:text-green-700">
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-red-600">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 group">
+                      <h3 className="font-bold text-lg text-gray-900">{p.name}</h3>
+                      <button
+                        onClick={() => startRename(p)}
+                        className="text-gray-300 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                   <p className="text-xs text-gray-400 mt-1">
                     {formatNumber(p.items.length)} {t("playlists.itemCount")} ·{" "}
                     {p.publishedAt
@@ -222,7 +314,7 @@ export default function PlaylistsPage() {
                     {t("common.save")}
                   </button>
                   <button
-                    onClick={() => setPickerFor(null)}
+                    onClick={closePicker}
                     className="border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-50"
                   >
                     {t("common.cancel")}
@@ -230,7 +322,7 @@ export default function PlaylistsPage() {
                 </div>
               ) : (
                 <button
-                  onClick={() => setPickerFor(p.id)}
+                  onClick={() => openPicker(p.id)}
                   className="mt-3 flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
                 >
                   <Plus className="w-3.5 h-3.5" /> {t("playlists.addMediaButton")}

@@ -212,6 +212,7 @@ const ja: Partial<Dictionary> = {
   "playlists.newButton": "新規プレイリスト",
   "playlists.namePlaceholder": "例: ロビーローテーション",
   "playlists.createFailed": "プレイリストの作成に失敗しました",
+  "playlists.renameFailed": "プレイリスト名の変更に失敗しました",
   "playlists.emptyState": "プレイリストはまだありません。",
   "playlists.addMediaButton": "メディアを追加",
   "playlists.selectMediaLabel": "メディアを選択",

@@ -213,6 +213,7 @@ const vi: Partial<Dictionary> = {
   "playlists.newButton": "Danh Sách Phát Mới",
   "playlists.namePlaceholder": "Ví dụ: Vòng Lặp Sảnh Chính",
   "playlists.createFailed": "Tạo danh sách phát thất bại",
+  "playlists.renameFailed": "Đổi tên danh sách phát thất bại",
   "playlists.emptyState": "Chưa có danh sách phát nào.",
   "playlists.addMediaButton": "Thêm Media",
   "playlists.selectMediaLabel": "Chọn media",

@@ -18,7 +18,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   const media = await prisma.mediaAsset.findFirst({
-    where: { id, ...tenantWhere(session.user) },
+    where: { id, ...tenantWhere(session.user), deletedAt: null },
   });
   if (!media) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

@@ -18,7 +18,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   const playlist = await prisma.playlist.findFirst({
-    where: { id: playlistId, ...tenantWhere(session.user) },
+    where: { id: playlistId, ...tenantWhere(session.user), deletedAt: null },
   });
   if (!playlist) {
     return NextResponse.json({ error: "Playlist not found" }, { status: 404 });

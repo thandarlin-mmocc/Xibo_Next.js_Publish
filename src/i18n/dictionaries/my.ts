@@ -216,6 +216,7 @@ const my: Partial<Dictionary> = {
   "playlists.newButton": "ဖွင့်စာရင်းအသစ်",
   "playlists.namePlaceholder": "ဥပမာ- လော်ဘီ လည်ပတ်မှု",
   "playlists.createFailed": "ဖွင့်စာရင်း ဖန်တီး၍ မရပါ",
+  "playlists.renameFailed": "ဖွင့်စာရင်း အမည်ပြောင်း၍ မရပါ",
   "playlists.emptyState": "ဖွင့်စာရင်း မရှိသေးပါ။",
   "playlists.addMediaButton": "မီဒီယာ ထည့်ရန်",
   "playlists.selectMediaLabel": "မီဒီယာ ရွေးပါ",

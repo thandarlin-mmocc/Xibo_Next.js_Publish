@@ -218,6 +218,7 @@ const en = {
   "playlists.newButton": "New Playlist",
   "playlists.namePlaceholder": "e.g. Lobby Rotation",
   "playlists.createFailed": "Failed to create playlist",
+  "playlists.renameFailed": "Failed to rename playlist",
   "playlists.emptyState": "No playlists yet.",
   "playlists.addMediaButton": "Add Media",
   "playlists.selectMediaLabel": "Select media",

@@ -5,7 +5,10 @@ import { useLocale } from "@/components/providers/LocaleProvider";
 import type { TranslationKey } from "@/i18n/getDictionary";
 import { MediaType } from "@prisma/client";
 import { FileText, Film, Image as ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+
+type Tenant = { id: string; name: string; type: string };
 
 type MediaAsset = {
   id: string;
@@ -38,7 +41,11 @@ function formatBytes(bytes: number | null): string {
 
 export default function MediaLibraryPage() {
   const { t, formatDate } = useLocale();
+  const { data: sessionData } = useSession();
+  const isAdmin = sessionData?.user?.role === "ADMIN";
+
   const [media, setMedia] = useState<MediaAsset[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -47,6 +54,7 @@ export default function MediaLibraryPage() {
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [tenantId, setTenantId] = useState("");
 
   const fetchMedia = async () => {
     setLoading(true);
@@ -59,9 +67,20 @@ export default function MediaLibraryPage() {
     fetchMedia();
   }, []);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetch("/api/tenants")
+      .then((res) => (res.ok ? res.json() : []))
+      .then(setTenants);
+  }, [isAdmin]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !title) return;
+    if (isAdmin && !tenantId) {
+      setError(t("users.tenantLabel"));
+      return;
+    }
     setUploading(true);
     setError("");
 
@@ -69,6 +88,7 @@ export default function MediaLibraryPage() {
     formData.append("title", title);
     formData.append("tags", tags);
     formData.append("file", file);
+    if (isAdmin) formData.append("tenantId", tenantId);
 
     const res = await fetch("/api/media", { method: "POST", body: formData });
     if (res.ok) {
@@ -76,6 +96,7 @@ export default function MediaLibraryPage() {
       setTitle("");
       setTags("");
       setFile(null);
+      setTenantId("");
       fetchMedia();
     } else {
       const data = await res.json().catch(() => ({}));
@@ -175,6 +196,24 @@ export default function MediaLibraryPage() {
                   className="w-full p-2 border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 />
               </div>
+              {isAdmin && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t("users.tenantLabel")}</label>
+                  <select
+                    value={tenantId}
+                    onChange={(e) => setTenantId(e.target.value)}
+                    required
+                    className="w-full p-2 border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  >
+                    <option value="">{t("users.tenantLabel")}</option>
+                    {tenants.map((tn) => (
+                      <option key={tn.id} value={tn.id}>
+                        {tn.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t("media.fileLabel")}</label>
                 <input
