@@ -47,6 +47,16 @@ export function canManageFacilities(role: UserRole): boolean {
   );
 }
 
+/**
+ * Logging a cleaning is an on-site physical action, not an administrative
+ * one - platform ADMIN deliberately excluded, same reasoning as
+ * canUploadArtwork excluding ADMIN. Distinct from canManageFacilities
+ * (viewing/resolving issues), which ADMIN legitimately needs for oversight.
+ */
+export function canLogCleaning(role: UserRole): boolean {
+  return role === UserRole.AIRPORT_ADMIN || role === UserRole.OPS;
+}
+
 export function canManageUsers(role: UserRole): boolean {
   return role === UserRole.ADMIN;
 }

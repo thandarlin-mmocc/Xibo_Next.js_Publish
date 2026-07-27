@@ -1,5 +1,5 @@
 import { authOptions } from "@/lib/auth";
-import { canManageFacilities, tenantWhere } from "@/lib/authz";
+import { canLogCleaning, canManageFacilities, tenantWhere } from "@/lib/authz";
 import { logAudit, requestMeta } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { AuditAction } from "@prisma/client";
@@ -54,8 +54,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session || !canManageFacilities(session.user.role)) {
+  if (!session || !canLogCleaning(session.user.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!session.user.tenantId) {
+    return NextResponse.json({ error: "User has no tenant assigned" }, { status: 400 });
   }
 
   const body = await request.json().catch(() => ({}) as any);

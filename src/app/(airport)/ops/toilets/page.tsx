@@ -3,8 +3,11 @@
 import AppShell from "@/components/layout/AppShell";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { Loader2, QrCode, Sparkles } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+
+type Tenant = { id: string; name: string; type: string };
 
 type IssueStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
 
@@ -19,14 +22,26 @@ type ToiletIssue = {
 
 export default function ToiletOpsPage() {
   const { formatDateTime, t } = useLocale();
+  const { data: sessionData } = useSession();
+  const isAdmin = sessionData?.user?.role === "ADMIN";
+
   const [issues, setIssues] = useState<ToiletIssue[]>([]);
   const [filter, setFilter] = useState<IssueStatus>("OPEN");
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<number | null>(null);
 
   const [qrLocation, setQrLocation] = useState("");
+  const [qrTenantId, setQrTenantId] = useState("");
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [qrResult, setQrResult] = useState<{ dataUrl: string; reportUrl: string } | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetch("/api/tenants")
+      .then((res) => (res.ok ? res.json() : []))
+      .then(setTenants);
+  }, [isAdmin]);
 
   const TYPE_LABELS: Record<string, string> = {
     NO_TISSUE: t("issueType.noTissue"),
@@ -66,11 +81,15 @@ export default function ToiletOpsPage() {
 
   const generateQr = async () => {
     if (!qrLocation.trim()) return;
+    if (isAdmin && !qrTenantId) return;
     setQrLoading(true);
     const res = await fetch("/api/toilet-qr", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ locationId: qrLocation.trim() }),
+      body: JSON.stringify({
+        locationId: qrLocation.trim(),
+        ...(isAdmin ? { tenantId: qrTenantId } : {}),
+      }),
     });
     if (res.ok) setQrResult(await res.json());
     setQrLoading(false);
@@ -157,6 +176,21 @@ export default function ToiletOpsPage() {
               </div>
               <h2 className="text-lg font-bold text-gray-900">{t("toilets.generateQrTitle")}</h2>
             </div>
+            {isAdmin && (
+              <select
+                value={qrTenantId}
+                onChange={(e) => setQrTenantId(e.target.value)}
+                required
+                className="w-full p-2 border border-gray-300 rounded-lg text-black text-sm mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              >
+                <option value="">{t("users.tenantLabel")}</option>
+                {tenants.map((tn) => (
+                  <option key={tn.id} value={tn.id}>
+                    {tn.name}
+                  </option>
+                ))}
+              </select>
+            )}
             <input
               type="text"
               value={qrLocation}
