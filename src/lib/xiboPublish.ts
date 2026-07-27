@@ -6,39 +6,38 @@ import axios from "axios";
 import fs from "fs/promises";
 import path from "path";
 
-export class ArtworkImageNotFoundError extends Error {}
+export class StoredMediaNotFoundError extends Error {}
 
 /**
- * Reads an artwork's image into a buffer, regardless of where it's stored -
- * imagePath is a local /uploads/... path in local dev (see src/lib/storage.ts's
- * fallback) or an absolute Blob/S3 URL once cloud storage is configured. Xibo
- * only ever gets a buffer either way; it doesn't know or care which backend
- * served it.
+ * Reads a stored file into a buffer, regardless of where it's stored - a
+ * local /uploads/... path in local dev (see src/lib/storage.ts's fallback)
+ * or an absolute Blob/S3 URL once cloud storage is configured. Xibo only
+ * ever gets a buffer either way; it doesn't know or care which backend
+ * served it. Shared by Artwork's imagePath and MediaAsset's storagePath
+ * (see src/lib/mediaPublish.ts) - one storage-resolution rule for both.
  */
-async function resolveArtworkImageBuffer(
-  artwork: Artwork,
+export async function resolveStoredMediaBuffer(
+  storagePath: string,
 ): Promise<{ buffer: Buffer; ext: string }> {
-  const imagePath = artwork.imagePath ?? "";
-
-  if (/^https?:\/\//i.test(imagePath)) {
+  if (/^https?:\/\//i.test(storagePath)) {
     try {
-      const res = await axios.get(imagePath, { responseType: "arraybuffer" });
-      const ext = path.extname(new URL(imagePath).pathname) || ".jpg";
+      const res = await axios.get(storagePath, { responseType: "arraybuffer" });
+      const ext = path.extname(new URL(storagePath).pathname) || ".jpg";
       return { buffer: Buffer.from(res.data), ext };
     } catch {
-      throw new ArtworkImageNotFoundError(
-        `Could not fetch artwork image from ${imagePath}`,
+      throw new StoredMediaNotFoundError(
+        `Could not fetch stored media from ${storagePath}`,
       );
     }
   }
 
-  const relPath = imagePath.replace(/^\/+/, "");
+  const relPath = storagePath.replace(/^\/+/, "");
   const absolutePath = path.join(process.cwd(), "public", relPath);
   try {
     const buffer = await fs.readFile(absolutePath);
     return { buffer, ext: path.extname(absolutePath) || ".jpg" };
   } catch {
-    throw new ArtworkImageNotFoundError(`Artwork image not found at ${absolutePath}`);
+    throw new StoredMediaNotFoundError(`Stored media not found at ${absolutePath}`);
   }
 }
 
@@ -48,7 +47,7 @@ type ResolvedTarget = {
   duration: number;
 };
 
-function extractMediaId(xiboResponse: any): number | null {
+export function extractMediaId(xiboResponse: any): number | null {
   const candidates = [
     xiboResponse?.mediaId,
     xiboResponse?.id,
@@ -108,7 +107,7 @@ export async function resolvePublishTargets(
 export async function ensureMediaUploaded(artwork: Artwork): Promise<number> {
   if (artwork.xiboMediaId) return artwork.xiboMediaId;
 
-  const { buffer, ext } = await resolveArtworkImageBuffer(artwork);
+  const { buffer, ext } = await resolveStoredMediaBuffer(artwork.imagePath ?? "");
   const mediaName = `artwork-${artwork.id}`;
   const xiboUpload = await uploadToXiboLibrary(buffer, mediaName, ext);
 

@@ -51,6 +51,22 @@ export function canManageUsers(role: UserRole): boolean {
   return role === UserRole.ADMIN;
 }
 
+/** Own-CMS media library and playlists - anyone with real content responsibilities, not pure viewers. */
+export function canManageMedia(role: UserRole): boolean {
+  return (
+    role === UserRole.ADMIN ||
+    role === UserRole.SCHOOL_ADMIN ||
+    role === UserRole.TEACHER ||
+    role === UserRole.AIRPORT_ADMIN ||
+    role === UserRole.OPS ||
+    role === UserRole.CONTENT_EDITOR
+  );
+}
+
+export function canPublishMedia(role: UserRole): boolean {
+  return canManageMedia(role);
+}
+
 const SCHOOL_ROLES: UserRole[] = [
   UserRole.SCHOOL_ADMIN,
   UserRole.TEACHER,

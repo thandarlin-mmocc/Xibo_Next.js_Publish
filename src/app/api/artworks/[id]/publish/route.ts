@@ -3,7 +3,7 @@ import { canPublishArtwork, tenantWhere } from "@/lib/authz";
 import { logAudit, requestMeta } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
 import { ArtworkStatus, AuditAction } from "@prisma/client";
-import { ArtworkImageNotFoundError, publishArtwork } from "@/lib/xiboPublish";
+import { StoredMediaNotFoundError, publishArtwork } from "@/lib/xiboPublish";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true, mediaId, targets });
   } catch (error: any) {
-    if (error instanceof ArtworkImageNotFoundError) {
+    if (error instanceof StoredMediaNotFoundError) {
       return NextResponse.json(
         { error: "Image not found on server", imagePath: error.message },
         { status: 400 },

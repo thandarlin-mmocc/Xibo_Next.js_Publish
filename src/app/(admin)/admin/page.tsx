@@ -5,7 +5,7 @@ import { getDictionary } from "@/i18n/getDictionary";
 import { resolveLocaleContext } from "@/i18n/resolveLocale";
 import { formatNumber } from "@/i18n/format";
 import { ArtworkStatus, ToiletIssueStatus } from "@prisma/client";
-import { AlertTriangle, ArrowRight, Image as ImageIcon, PlaneTakeoff, Sparkles, Users } from "lucide-react";
+import { AlertTriangle, ArrowRight, Image as ImageIcon, PlaneTakeoff, PlaySquare, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminOverviewPage() {
@@ -42,12 +42,20 @@ export default async function AdminOverviewPage() {
           <h1 className="text-xl font-bold text-gray-900 mb-1">{t["adminOverview.title"]}</h1>
           <p className="text-gray-500 text-sm">{t["adminOverview.subtitle"]}</p>
         </div>
-        <Link
-          href="/admin/users"
-          className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 shrink-0"
-        >
-          <Users className="w-4 h-4" /> {t["users.backLink"]}
-        </Link>
+        <div className="flex gap-2 shrink-0">
+          <Link
+            href="/media"
+            className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50"
+          >
+            <PlaySquare className="w-4 h-4" /> {t["nav.mediaLibrary"]}
+          </Link>
+          <Link
+            href="/admin/users"
+            className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50"
+          >
+            <Users className="w-4 h-4" /> {t["users.backLink"]}
+          </Link>
+        </div>
       </div>
 
       {alerts.length > 0 && (

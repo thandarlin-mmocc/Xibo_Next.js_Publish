@@ -48,6 +48,12 @@ enum FlightEventType {
   CANCELLED
 }
 
+enum MediaType {
+  IMAGE
+  VIDEO
+  PDF
+}
+
 enum AuditAction {
   LOGIN_SUCCESS
   LOGIN_FAILURE
@@ -96,6 +102,8 @@ model User {
   flightSubscriptions FlightSubscription[] @relation("UserFlightSubscriptions")
   AuditLog            AuditLog[]
   tenant              Tenant?              @relation(fields: [tenantId], references: [id])
+  createdMedia        MediaAsset[]         @relation("MediaCreatedBy")
+  createdPlaylists    Playlist[]           @relation("PlaylistCreatedBy")
 
   @@index([role])
   @@index([email])
@@ -118,6 +126,8 @@ model Tenant {
   ToiletCleaningLog  ToiletCleaningLog[]
   XiboDisplayHealth  XiboDisplayHealth[]
   PublishTarget      PublishTarget[]
+  MediaAsset         MediaAsset[]
+  Playlist           Playlist[]
 }
 
 
@@ -371,4 +381,72 @@ model XiboDisplayHealth {
   tenant    Tenant?  @relation(fields: [tenantId], references: [id])
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+}
+
+/// The platform's own media library - the first piece of the native CMS that
+/// replaces Xibo's, per the phased migration plan (own data model now,
+/// publish still goes through Xibo's proven upload/assign API under the hood
+/// until a player runtime exists to remove that dependency).
+model MediaAsset {
+  id              String    @id @default(cuid())
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id])
+  type            MediaType
+  title           String
+  storagePath     String // local /uploads/... path or an absolute Blob/S3 URL - see src/lib/storage.ts
+  mimeType        String?
+  fileSize        Int? // bytes
+  durationSeconds Int? // video only
+  tags            String[] @default([])
+
+  xiboMediaId Int? // dedup/idempotency once published to Xibo, same pattern as Artwork.xiboMediaId
+
+  createdById String?
+  createdBy   User?   @relation("MediaCreatedBy", fields: [createdById], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  playlistItems PlaylistItem[]
+
+  @@index([tenantId, type])
+  @@index([xiboMediaId])
+}
+
+model Playlist {
+  id   String @id @default(cuid())
+  name String
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  createdById String?
+  createdBy   User?   @relation("PlaylistCreatedBy", fields: [createdById], references: [id])
+
+  publishedAt DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  items PlaylistItem[]
+
+  @@index([tenantId])
+}
+
+model PlaylistItem {
+  id         String   @id @default(cuid())
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  mediaAssetId String
+  mediaAsset   MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  order           Int
+  durationSeconds Int @default(10)
+
+  createdAt DateTime @default(now())
+
+  @@index([playlistId, order])
 }
