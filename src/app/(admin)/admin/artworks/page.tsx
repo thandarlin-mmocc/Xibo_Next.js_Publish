@@ -1,6 +1,7 @@
 "use client";
 
 import AppShell from "@/components/layout/AppShell";
+import BackLink from "@/components/layout/BackLink";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { useEffect, useState } from "react";
 import {
@@ -10,9 +11,7 @@ import {
   Search,
   LayoutGrid,
   Square,
-  ArrowLeft,
 } from "lucide-react";
-import Link from "next/link";
 
 type ArtworkStatusFilter = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -94,12 +93,7 @@ export default function AdminPage() {
 
   return (
     <AppShell titleKey="nav.centralAdmin" roleLabelKey="nav.roleAdmin">
-      <Link
-        href="/admin"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" /> {t("adminArtworks.overviewLink")}
-      </Link>
+      <BackLink href="/admin" label={t("adminArtworks.overviewLink")} />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 items-center bg-white p-2 rounded-xl border border-gray-100 shadow-sm w-fit">
           {(["PENDING", "APPROVED", "REJECTED"] as const).map((f) => (

@@ -17,6 +17,7 @@ const en = {
   "common.largeView": "Large view",
   "common.download": "Download",
   "common.unauthorized": "You don't have access to this page.",
+  "common.back": "Back",
 
   "nav.centralAdmin": "Central Admin",
   "nav.teacherDashboard": "Teacher Dashboard",

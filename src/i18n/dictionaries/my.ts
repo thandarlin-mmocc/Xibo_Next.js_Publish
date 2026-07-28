@@ -14,6 +14,7 @@ const my: Partial<Dictionary> = {
   "common.largeView": "ပုံအကြီးပုံစံ",
   "common.download": "ဒေါင်းလုဒ်လုပ်မည်",
   "common.unauthorized": "ဤစာမျက်နှာသို့ ဝင်ရောက်ခွင့် မရှိပါ။",
+  "common.back": "နောက်သို့",
 
   "nav.centralAdmin": "စုစည်းစီမံခန့်ခွဲမှု",
   "nav.teacherDashboard": "ဆရာ/ဆရာမ ဒက်ရှ်ဘုတ်",

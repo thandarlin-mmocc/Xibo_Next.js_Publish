@@ -11,6 +11,7 @@ const ja: Partial<Dictionary> = {
   "common.largeView": "拡大表示",
   "common.download": "ダウンロード",
   "common.unauthorized": "このページへのアクセス権がありません。",
+  "common.back": "戻る",
 
   "nav.centralAdmin": "統合管理",
   "nav.teacherDashboard": "先生用ダッシュボード",

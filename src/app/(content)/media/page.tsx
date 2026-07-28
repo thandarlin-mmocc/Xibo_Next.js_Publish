@@ -1,8 +1,10 @@
 "use client";
 
 import AppShell from "@/components/layout/AppShell";
+import BackLink from "@/components/layout/BackLink";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { TranslationKey } from "@/i18n/getDictionary";
+import { roleHomePath } from "@/lib/authz";
 import { MediaType } from "@prisma/client";
 import { FileText, Film, Image as ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -43,6 +45,9 @@ export default function MediaLibraryPage() {
   const { t, formatDate } = useLocale();
   const { data: sessionData } = useSession();
   const isAdmin = sessionData?.user?.role === "ADMIN";
+  const backHref = sessionData?.user
+    ? roleHomePath(sessionData.user.role, sessionData.user.tenantType)
+    : "/dashboard";
 
   const [media, setMedia] = useState<MediaAsset[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -114,6 +119,7 @@ export default function MediaLibraryPage() {
 
   return (
     <AppShell titleKey="nav.mediaLibrary" roleLabelKey="nav.roleContentManager">
+      <BackLink href={backHref} label={t("common.back")} />
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-xl font-bold text-gray-900">{t("media.pageTitle")}</h1>
         <button

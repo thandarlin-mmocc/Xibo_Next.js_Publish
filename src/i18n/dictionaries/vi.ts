@@ -12,6 +12,7 @@ const vi: Partial<Dictionary> = {
   "common.largeView": "Xem cỡ lớn",
   "common.download": "Tải xuống",
   "common.unauthorized": "Bạn không có quyền truy cập trang này.",
+  "common.back": "Quay lại",
 
   "nav.centralAdmin": "Quản Trị Trung Tâm",
   "nav.teacherDashboard": "Bảng Điều Khiển Giáo Viên",

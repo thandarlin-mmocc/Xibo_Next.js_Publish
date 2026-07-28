@@ -1,11 +1,11 @@
 "use client";
 
 import AppShell from "@/components/layout/AppShell";
+import BackLink from "@/components/layout/BackLink";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import type { TranslationKey } from "@/i18n/getDictionary";
 import { UserRole } from "@prisma/client";
-import { ArrowLeft, Loader2, Pencil, Plus, UserX, UserCheck } from "lucide-react";
-import Link from "next/link";
+import { Loader2, Pencil, Plus, UserX, UserCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Tenant = { id: string; name: string; type: string };
@@ -140,12 +140,7 @@ export default function UsersManagementPage() {
 
   return (
     <AppShell titleKey="nav.centralAdmin" roleLabelKey="nav.roleAdmin">
-      <Link
-        href="/admin"
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" /> {t("adminArtworks.overviewLink")}
-      </Link>
+      <BackLink href="/admin" label={t("adminArtworks.overviewLink")} />
 
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-xl font-bold text-gray-900">{t("users.pageTitle")}</h1>

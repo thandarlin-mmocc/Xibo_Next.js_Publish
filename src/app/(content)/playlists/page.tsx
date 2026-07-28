@@ -1,7 +1,9 @@
 "use client";
 
 import AppShell from "@/components/layout/AppShell";
+import BackLink from "@/components/layout/BackLink";
 import { useLocale } from "@/components/providers/LocaleProvider";
+import { roleHomePath } from "@/lib/authz";
 import { MediaType } from "@prisma/client";
 import { Check, Loader2, Pencil, Plus, Send, Trash2, X } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -33,6 +35,9 @@ export default function PlaylistsPage() {
   const { t, formatDateTime, formatNumber } = useLocale();
   const { data: sessionData } = useSession();
   const isAdmin = sessionData?.user?.role === "ADMIN";
+  const backHref = sessionData?.user
+    ? roleHomePath(sessionData.user.role, sessionData.user.tenantType)
+    : "/dashboard";
 
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [media, setMedia] = useState<MediaAsset[]>([]);
@@ -169,6 +174,7 @@ export default function PlaylistsPage() {
 
   return (
     <AppShell titleKey="nav.playlists" roleLabelKey="nav.roleContentManager">
+      <BackLink href={backHref} label={t("common.back")} />
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-xl font-bold text-gray-900">{t("playlists.pageTitle")}</h1>
         <form onSubmit={createPlaylist} className="flex gap-2">

@@ -1,8 +1,9 @@
 "use client";
 
 import AppShell from "@/components/layout/AppShell";
+import BackLink from "@/components/layout/BackLink";
 import { useLocale } from "@/components/providers/LocaleProvider";
-import { canManageDevices } from "@/lib/authz";
+import { canManageDevices, roleHomePath } from "@/lib/authz";
 import { DeviceStatus, UserRole } from "@prisma/client";
 import { Loader2, MonitorSmartphone, Pause, Play, Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -26,6 +27,7 @@ export default function DevicesPage() {
   const role = sessionData?.user?.role as UserRole | undefined;
   const isAdmin = role === UserRole.ADMIN;
   const allowed = role ? canManageDevices(role) : false;
+  const backHref = role ? roleHomePath(role, sessionData?.user?.tenantType) : "/dashboard";
 
   const [devices, setDevices] = useState<Device[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -106,6 +108,7 @@ export default function DevicesPage() {
 
   return (
     <AppShell titleKey="nav.devices" roleLabelKey="nav.roleContentManager">
+      <BackLink href={backHref} label={t("common.back")} />
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
         <h2 className="font-bold text-gray-900 mb-1">{t("devices.claimSectionTitle")}</h2>
         <p className="text-sm text-gray-500 mb-4">{t("devices.claimSectionHint")}</p>

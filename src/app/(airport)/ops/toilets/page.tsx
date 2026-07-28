@@ -1,6 +1,7 @@
 "use client";
 
 import AppShell from "@/components/layout/AppShell";
+import BackLink from "@/components/layout/BackLink";
 import { useLocale } from "@/components/providers/LocaleProvider";
 import { Loader2, QrCode, Sparkles } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -97,6 +98,7 @@ export default function ToiletOpsPage() {
 
   return (
     <AppShell titleKey="nav.restroomOps" roleLabelKey="nav.roleOps">
+      <BackLink href="/ops" label={t("common.back")} />
       <div className="flex justify-end mb-4">
         <Link href="/ops/toilets/clean" className="text-sm text-blue-600 hover:underline">
           {t("toilets.openCleaningModeLink")} →
