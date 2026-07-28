@@ -11,6 +11,7 @@ const vi: Partial<Dictionary> = {
   "common.gridView": "Xem dạng lưới",
   "common.largeView": "Xem cỡ lớn",
   "common.download": "Tải xuống",
+  "common.unauthorized": "Bạn không có quyền truy cập trang này.",
 
   "nav.centralAdmin": "Quản Trị Trung Tâm",
   "nav.teacherDashboard": "Bảng Điều Khiển Giáo Viên",
@@ -231,6 +232,30 @@ const vi: Partial<Dictionary> = {
   "playlists.confirmDelete": "Xóa danh sách phát này?",
   "playlists.deleteFailed": "Xóa danh sách phát thất bại",
   "playlists.emptyItemsState": "Chưa có media nào trong danh sách phát này.",
+
+  "nav.devices": "Thiết bị",
+  "devices.pageTitle": "Thiết bị",
+  "devices.claimSectionTitle": "Thêm thiết bị mới",
+  "devices.claimSectionHint": "Nhập mã hiển thị trên màn hình thiết bị để thêm vào danh sách quản lý.",
+  "devices.registrationCodeLabel": "Mã đăng ký",
+  "devices.registrationCodePlaceholder": "vd: K7QX2P",
+  "devices.nameLabel": "Tên thiết bị",
+  "devices.namePlaceholder": "vd: Màn hình Sảnh",
+  "devices.claimButton": "Thêm thiết bị",
+  "devices.claimFailed": "Không thể thêm thiết bị - kiểm tra lại mã và thử lại.",
+  "devices.claimSuccess": "Đã thêm thiết bị thành công",
+  "devices.fleetSectionTitle": "Thiết bị của bạn",
+  "devices.emptyState": "Chưa có thiết bị nào - hãy thêm một thiết bị ở trên.",
+  "devices.lastSeenLabel": "Lần cuối hoạt động:",
+  "devices.neverSeen": "Chưa từng kết nối",
+  "devices.statusActive": "Đang hoạt động",
+  "devices.statusSuspended": "Đã tạm dừng",
+  "devices.statusRejected": "Đã từ chối",
+  "devices.suspendButton": "Tạm dừng",
+  "devices.reactivateButton": "Kích hoạt lại",
+  "devices.confirmSuspend": "Tạm dừng thiết bị này? Thiết bị sẽ không thể kết nối cho đến khi được kích hoạt lại.",
+  "devices.confirmReactivate": "Kích hoạt lại thiết bị này?",
+  "devices.actionFailed": "Thao tác thất bại",
 };
 
 export default vi;

@@ -13,6 +13,7 @@ const my: Partial<Dictionary> = {
   "common.gridView": "ဇယားကွက်ပုံစံ",
   "common.largeView": "ပုံအကြီးပုံစံ",
   "common.download": "ဒေါင်းလုဒ်လုပ်မည်",
+  "common.unauthorized": "ဤစာမျက်နှာသို့ ဝင်ရောက်ခွင့် မရှိပါ။",
 
   "nav.centralAdmin": "စုစည်းစီမံခန့်ခွဲမှု",
   "nav.teacherDashboard": "ဆရာ/ဆရာမ ဒက်ရှ်ဘုတ်",
@@ -234,6 +235,30 @@ const my: Partial<Dictionary> = {
   "playlists.confirmDelete": "ဤဖွင့်စာရင်းကို ဖျက်မည်လား?",
   "playlists.deleteFailed": "ဖွင့်စာရင်း ဖျက်၍ မရပါ",
   "playlists.emptyItemsState": "ဤဖွင့်စာရင်းတွင် မီဒီယာ မရှိသေးပါ။",
+
+  "nav.devices": "စက်ပစ္စည်းများ",
+  "devices.pageTitle": "စက်ပစ္စည်းများ",
+  "devices.claimSectionTitle": "စက်ပစ္စည်းအသစ် ထည့်မည်",
+  "devices.claimSectionHint": "စက်ပစ္စည်း၏ မျက်နှာပြင်ပေါ်တွင် ပြထားသော ကုဒ်ကို ထည့်သွင်းပါ။",
+  "devices.registrationCodeLabel": "မှတ်ပုံတင်ကုဒ်",
+  "devices.registrationCodePlaceholder": "ဥပမာ: K7QX2P",
+  "devices.nameLabel": "စက်ပစ္စည်း အမည်",
+  "devices.namePlaceholder": "ဥပမာ: ဧည့်ခန်း မျက်နှာပြင်",
+  "devices.claimButton": "စက်ပစ္စည်း ထည့်မည်",
+  "devices.claimFailed": "စက်ပစ္စည်း ထည့်၍ မရပါ - ကုဒ်ကို စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။",
+  "devices.claimSuccess": "စက်ပစ္စည်းကို အောင်မြင်စွာ ထည့်ပြီးပါပြီ",
+  "devices.fleetSectionTitle": "သင့်စက်ပစ္စည်းများ",
+  "devices.emptyState": "စက်ပစ္စည်း မရှိသေးပါ။",
+  "devices.lastSeenLabel": "နောက်ဆုံး တွေ့ခဲ့ချိန်:",
+  "devices.neverSeen": "တစ်ခါမှ ချိတ်ဆက်မှု မရှိသေးပါ",
+  "devices.statusActive": "အသုံးပြုနေသည်",
+  "devices.statusSuspended": "ဆိုင်းငံ့ထားသည်",
+  "devices.statusRejected": "ပယ်ချထားသည်",
+  "devices.suspendButton": "ဆိုင်းငံ့မည်",
+  "devices.reactivateButton": "ပြန်စမည်",
+  "devices.confirmSuspend": "ဤစက်ပစ္စည်းကို ဆိုင်းငံ့မည်လား?",
+  "devices.confirmReactivate": "ဤစက်ပစ္စည်းကို ပြန်စမည်လား?",
+  "devices.actionFailed": "လုပ်ဆောင်ချက် မအောင်မြင်ပါ",
 };
 
 export default my;

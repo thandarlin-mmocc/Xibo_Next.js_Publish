@@ -54,6 +54,13 @@ enum MediaType {
   PDF
 }
 
+enum DeviceStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  SUSPENDED
+}
+
 enum AuditAction {
   LOGIN_SUCCESS
   LOGIN_FAILURE
@@ -75,6 +82,9 @@ enum AuditAction {
 
   XIBO_SYNC_SUCCESS
   XIBO_SYNC_ERROR
+
+  DEVICE_APPROVE
+  DEVICE_REJECT
 }
 model User {
   id           String   @id @default(cuid())
@@ -104,6 +114,7 @@ model User {
   tenant              Tenant?              @relation(fields: [tenantId], references: [id])
   createdMedia        MediaAsset[]         @relation("MediaCreatedBy")
   createdPlaylists    Playlist[]           @relation("PlaylistCreatedBy")
+  approvedDevices     Device[]             @relation("DeviceApprovedBy")
 
   @@index([role])
   @@index([email])
@@ -128,6 +139,7 @@ model Tenant {
   PublishTarget      PublishTarget[]
   MediaAsset         MediaAsset[]
   Playlist           Playlist[]
+  Device             Device[]
 }
 
 
@@ -449,4 +461,70 @@ model PlaylistItem {
   createdAt DateTime @default(now())
 
   @@index([playlistId, order])
+}
+
+/// First slice of the own player runtime (Phase 2a/2b of the gated Future
+/// Direction Vision doc) - registration + heartbeat only. Deliberately not
+/// modeling device_groups/device_locations/device_content/sync_history yet;
+/// add those when the sync engine (Phase 2c) actually needs them.
+model Device {
+  id        String       @id @default(cuid())
+  deviceUid String       @unique // client-generated UUID, persisted locally by the player - survives re-registration
+  tenantId  String? // unknown until approved - a pending device belongs to no tenant yet
+  tenant    Tenant?      @relation(fields: [tenantId], references: [id])
+  name      String?
+  status    DeviceStatus @default(PENDING)
+
+  lastHeartbeatAt DateTime?
+  lastIpAddress   String?
+  cpuPct          Float?
+  ramPct          Float?
+  diskPct         Float?
+  playerVersion   String?
+
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?     @relation("DeviceApprovedBy", fields: [approvedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  registrations DeviceRegistration[]
+  tokens        DeviceToken[]
+
+  @@index([tenantId, status])
+}
+
+/// One row per registration *attempt*, kept even after claiming, so "who
+/// registered device X and when" is always answerable.
+model DeviceRegistration {
+  id               String    @id @default(cuid())
+  deviceId         String
+  device           Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  registrationCode String    @unique // short, human-typeable, single-use
+  ipAddress        String?
+  expiresAt        DateTime // ~15 minutes from creation
+  claimedAt        DateTime? // set once the player successfully exchanges it for tokens
+
+  createdAt DateTime @default(now())
+
+  @@index([registrationCode])
+  @@index([deviceId])
+}
+
+/// Only refresh tokens are persisted (so they can be revoked/rotated).
+/// Access tokens are short-lived, stateless JWTs verified by signature -
+/// never written here.
+model DeviceToken {
+  id            String    @id @default(cuid())
+  deviceId      String
+  device        Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  tokenHash     String    @unique // sha256 of the raw refresh token - never store it raw
+  issuedAt      DateTime  @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  rotatedFromId String? // chains to the token this one replaced - a replayed old token is detectable
+
+  @@index([deviceId])
 }

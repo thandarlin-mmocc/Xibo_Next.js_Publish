@@ -77,6 +77,15 @@ export function canPublishMedia(role: UserRole): boolean {
   return canManageMedia(role);
 }
 
+/** Approving/rejecting a physical device is more privileged than general content management. */
+export function canManageDevices(role: UserRole): boolean {
+  return (
+    role === UserRole.ADMIN ||
+    role === UserRole.SCHOOL_ADMIN ||
+    role === UserRole.AIRPORT_ADMIN
+  );
+}
+
 const SCHOOL_ROLES: UserRole[] = [
   UserRole.SCHOOL_ADMIN,
   UserRole.TEACHER,

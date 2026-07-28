@@ -16,6 +16,7 @@ const en = {
   "common.gridView": "Grid view",
   "common.largeView": "Large view",
   "common.download": "Download",
+  "common.unauthorized": "You don't have access to this page.",
 
   "nav.centralAdmin": "Central Admin",
   "nav.teacherDashboard": "Teacher Dashboard",
@@ -192,6 +193,7 @@ const en = {
 
   "nav.mediaLibrary": "Media Library",
   "nav.playlists": "Playlists",
+  "nav.devices": "Devices",
   "nav.roleContentManager": "Content Manager",
 
   "media.pageTitle": "Media Library",
@@ -236,6 +238,29 @@ const en = {
   "playlists.confirmDelete": "Delete this playlist?",
   "playlists.deleteFailed": "Failed to delete playlist",
   "playlists.emptyItemsState": "No media in this playlist yet.",
+
+  "devices.pageTitle": "Devices",
+  "devices.claimSectionTitle": "Claim a new device",
+  "devices.claimSectionHint": "Enter the code shown on the device's screen to add it to your fleet.",
+  "devices.registrationCodeLabel": "Registration code",
+  "devices.registrationCodePlaceholder": "e.g. K7QX2P",
+  "devices.nameLabel": "Device name",
+  "devices.namePlaceholder": "e.g. Lobby Screen",
+  "devices.claimButton": "Claim Device",
+  "devices.claimFailed": "Failed to claim device - check the code and try again.",
+  "devices.claimSuccess": "Device claimed successfully",
+  "devices.fleetSectionTitle": "Your devices",
+  "devices.emptyState": "No devices yet - claim one above to get started.",
+  "devices.lastSeenLabel": "Last seen:",
+  "devices.neverSeen": "Never checked in",
+  "devices.statusActive": "Active",
+  "devices.statusSuspended": "Suspended",
+  "devices.statusRejected": "Rejected",
+  "devices.suspendButton": "Suspend",
+  "devices.reactivateButton": "Reactivate",
+  "devices.confirmSuspend": "Suspend this device? It will stop being able to check in until reactivated.",
+  "devices.confirmReactivate": "Reactivate this device?",
+  "devices.actionFailed": "Action failed",
 };
 
 export default en;

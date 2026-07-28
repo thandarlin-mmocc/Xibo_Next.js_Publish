@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Player</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #0b0f14;
+    color: #e6edf3;
+    font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  #root {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .card {
+    max-width: 480px;
+    padding: 48px;
+  }
+  .label {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 13px;
+    color: #8b949e;
+    margin-bottom: 16px;
+  }
+  .code {
+    font-size: 64px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    margin: 16px 0 24px;
+  }
+  .hint {
+    color: #8b949e;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  img.qr {
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+  .active .label { color: #3fb950; }
+  .error { color: #f85149; }
+</style>
+</head>
+<body>
+  <div id="root">
+    <div class="card">
+      <div class="label" id="label">Starting up…</div>
+      <div id="content"></div>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>

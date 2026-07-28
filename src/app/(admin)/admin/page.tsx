@@ -5,7 +5,7 @@ import { getDictionary } from "@/i18n/getDictionary";
 import { resolveLocaleContext } from "@/i18n/resolveLocale";
 import { formatNumber } from "@/i18n/format";
 import { ArtworkStatus, ToiletIssueStatus } from "@prisma/client";
-import { AlertTriangle, ArrowRight, Image as ImageIcon, PlaneTakeoff, PlaySquare, Sparkles, Users } from "lucide-react";
+import { AlertTriangle, ArrowRight, Image as ImageIcon, MonitorSmartphone, PlaneTakeoff, PlaySquare, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminOverviewPage() {
@@ -48,6 +48,12 @@ export default async function AdminOverviewPage() {
             className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50"
           >
             <PlaySquare className="w-4 h-4" /> {t["nav.mediaLibrary"]}
+          </Link>
+          <Link
+            href="/devices"
+            className="flex items-center gap-1.5 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50"
+          >
+            <MonitorSmartphone className="w-4 h-4" /> {t["nav.devices"]}
           </Link>
           <Link
             href="/admin/users"

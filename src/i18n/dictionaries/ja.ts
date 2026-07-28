@@ -10,6 +10,7 @@ const ja: Partial<Dictionary> = {
   "common.gridView": "グリッド表示",
   "common.largeView": "拡大表示",
   "common.download": "ダウンロード",
+  "common.unauthorized": "このページへのアクセス権がありません。",
 
   "nav.centralAdmin": "統合管理",
   "nav.teacherDashboard": "先生用ダッシュボード",
@@ -230,6 +231,30 @@ const ja: Partial<Dictionary> = {
   "playlists.confirmDelete": "このプレイリストを削除しますか?",
   "playlists.deleteFailed": "プレイリストの削除に失敗しました",
   "playlists.emptyItemsState": "このプレイリストにはまだメディアがありません。",
+
+  "nav.devices": "デバイス",
+  "devices.pageTitle": "デバイス",
+  "devices.claimSectionTitle": "新しいデバイスを登録",
+  "devices.claimSectionHint": "デバイスの画面に表示されているコードを入力してフリートに追加してください。",
+  "devices.registrationCodeLabel": "登録コード",
+  "devices.registrationCodePlaceholder": "例: K7QX2P",
+  "devices.nameLabel": "デバイス名",
+  "devices.namePlaceholder": "例: ロビー画面",
+  "devices.claimButton": "デバイスを登録",
+  "devices.claimFailed": "デバイスの登録に失敗しました。コードを確認して再試行してください。",
+  "devices.claimSuccess": "デバイスを登録しました",
+  "devices.fleetSectionTitle": "登録済みデバイス",
+  "devices.emptyState": "デバイスはまだありません。上のフォームから登録してください。",
+  "devices.lastSeenLabel": "最終確認:",
+  "devices.neverSeen": "未接続",
+  "devices.statusActive": "稼働中",
+  "devices.statusSuspended": "停止中",
+  "devices.statusRejected": "拒否済み",
+  "devices.suspendButton": "停止",
+  "devices.reactivateButton": "再開",
+  "devices.confirmSuspend": "このデバイスを停止しますか?再開するまでチェックインできなくなります。",
+  "devices.confirmReactivate": "このデバイスを再開しますか?",
+  "devices.actionFailed": "操作に失敗しました",
 };
 
 export default ja;
