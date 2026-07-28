@@ -2,13 +2,10 @@
   "name": "xibo-player",
   "version": "0.1.0",
   "private": true,
-  "description": "Kiosk player app - registers itself against the CMS, then displays content once approved.",
+  "description": "Windows kiosk shell - opens a fullscreen window pointed at the shared /player web page (also used by the Android TV app).",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
-  },
-  "dependencies": {
-    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "electron": "^33.0.0"

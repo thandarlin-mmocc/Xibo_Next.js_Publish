@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.XiboPlayer" parent="Theme.AppCompat.NoActionBar" />
+
+    <style name="Theme.XiboPlayer.Fullscreen" parent="Theme.XiboPlayer">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+</resources>

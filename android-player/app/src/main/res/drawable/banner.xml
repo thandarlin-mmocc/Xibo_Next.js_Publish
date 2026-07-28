@@ -1,0 +1,10 @@
+<!-- Placeholder TV launcher banner (must stay 320x180dp per Android TV spec) -
+     swap for real branding before a real release. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path android:fillColor="#0F172A" android:pathData="M0,0h320v180h-320z" />
+    <path android:fillColor="#38BDF8" android:pathData="M40,60 L100,60 L100,120 L40,120 Z" />
+</vector>
